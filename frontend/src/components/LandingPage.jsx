@@ -274,29 +274,29 @@ const faqs = [
   {
     question: "What is FindMyScholarship?",
     answer:
-      "FindMyScholarship is an e-Marketplace for Govt. schemes and services. Using myScheme you can find various government schemes, check your eligibility, and apply for the schemes.",
+      "FindMyScholarship is an e-Marketplace for Govt. schemes and services. Using FindMyScholarship you can find various government schemes, check your eligibility, and apply for the schemes.",
   },
   {
-    question: "How myScheme will help common citizens?",
+    question: "How FindMyScholarship will help common Students?",
     answer:
-      "myScheme will reduce the time and effort of citizens in searching for appropriate government schemes. The easy user interface of myScheme helps common people a lot in discovering and applying for schemes.",
+      "FindMyScholarship will reduce the time and effort of Students in searching for appropriate government schemes. The easy user interface of FindMyScholarship helps students a lot in discovering and applying for schemes.",
   },
   {
-    question: "Can I apply for the schemes through myScheme?",
+    question: "Can I apply for the schemes through FindMyScholarship?",
     answer:
-      "For now, the platform shall direct you to the application page of the scheme of your choice. It is envisaged that in the upcoming phases, myScheme shall have the feature to apply for schemes / services from within the platform/ app.",
-  },
-  {
-    question:
-      "How does myScheme work? How do I check for my eligibility through myScheme?",
-    answer:
-      "myScheme offers a convenient three-step process for the citizens to discover the government schemes for which they are eligible: Step 1 - The user enters his / her attributes such as demographic, income, social details, etc. Step 2 - The myScheme finds the relevant schemes from hundreds of schemes for the user. Step 3 - The user can select from the list of eligible schemes and get more information from the dedicated scheme page with detailed knowledge, FAQs, and application process and traverse to the application URL to apply.",
+      "For now, the platform shall direct you to the application page of the scheme of your choice. It is envisaged that in the upcoming phases, FindMyScholarship shall have the feature to apply for schemes / services from within the platform/ app.",
   },
   {
     question:
-      "What all information about a particular scheme can I find on myScheme?",
+      "How does FindMyScholarship work? How do I check for my eligibility through FindMyScholarship?",
     answer:
-      "myScheme provides details on the eligibility criteria, application process, and benefits being offered under that scheme. myScheme also answers the Frequently Asked Questions(FAQs) about the scheme.",
+      "FindMyScholarship offers a convenient three-step process for the students to discover the government schemes for which they are eligible: Step 1 - The user enters his / her attributes such as grades, income, social details, etc. Step 2 - The FindMyScholarship finds the relevant schemes from hundreds of schemes for the user. Step 3 - The user can select from the list of eligible schemes and get more information from the dedicated scheme page with detailed knowledge, FAQs, and application process and traverse to the application URL to apply.",
+  },
+  {
+    question:
+      "What all information about a particular scheme can I find on FindMyScholarship?",
+    answer:
+      "FindMyScholarship provides details on the eligibility criteria, application process, and benefits being offered under that scheme. FindMyScholarship also answers the Frequently Asked Questions(FAQs) about the scheme.",
   },
 ];
 
