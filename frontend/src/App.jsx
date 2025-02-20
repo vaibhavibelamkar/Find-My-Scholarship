@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import LandingPage from "./components/LandingPage";
 import Dashboard from "./pages/user/Dashboard";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Login from "./components/Login";
 
 const appRouter = createBrowserRouter([
   {
@@ -23,6 +24,15 @@ const appRouter = createBrowserRouter([
       </>
     ),
   },
+  {
+    path: "/login",
+    element: (
+      <>
+        <Login />
+      </>
+    ),
+  },
+  
 ]);
 
 function App() {

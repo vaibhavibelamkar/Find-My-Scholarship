@@ -1,5 +1,6 @@
 import React from "react";
 import { GraduationCap } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   return (
@@ -16,9 +17,11 @@ const Navbar = () => {
 
           {/* Auth Buttons */}
           <div className="flex items-center space-x-4">
-            <button className="px-4 py-2 text-white hover:text-[#001a33] hover:bg-white rounded-md transition-colors duration-300">
-              Login
-            </button>
+            <Link to="/login">
+              <button className="px-4 py-2 text-white hover:text-[#242a4b] hover:bg-white rounded-md transition-colors duration-300">
+                Login
+              </button>
+            </Link>
             <button className="px-4 py-2 bg-white text-[#001a33] rounded-md hover:bg-opacity-90 transition-colors duration-300 font-medium">
               Sign Up
             </button>
