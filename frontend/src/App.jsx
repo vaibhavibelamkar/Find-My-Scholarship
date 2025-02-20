@@ -1,7 +1,8 @@
 import "./App.css";
 import Navbar from "./components/Navbar";
 import LandingPage from "./components/LandingPage";
-import Dashboard from "./pages/user/Dashboard";
+import UserDashboard from "./pages/user/Dashboard";
+import AdminDashboard from "./pages/admin/Dashboard";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Login from "./components/Login";
 
@@ -20,7 +21,16 @@ const appRouter = createBrowserRouter([
     element: (
       <>
         <Navbar />
-        <Dashboard />
+        <UserDashboard />
+      </>
+    ),
+  },
+  {
+    path: "/admin/dashboard",
+    element: (
+      <>
+        <Navbar />
+        <AdminDashboard/>
       </>
     ),
   },
