@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   UserCircle,
@@ -31,7 +31,7 @@ const slides = [
   },
 ];
 
-const Slideshow = () => {
+const Slideshow = ({ scrollToAbout }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const nextSlide = () => {
@@ -75,7 +75,10 @@ const Slideshow = () => {
                 <button className="bg-[#001a33] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-white hover:text-black transition-colors">
                   Find Scholarships
                 </button>
-                <button className="bg-white bg-[#001a33] px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors">
+                <button
+                  onClick={scrollToAbout}
+                  className="bg-[#001a33] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 hover:text-black transition-colors"
+                >
                   Learn More
                 </button>
               </div>
@@ -134,18 +137,14 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-16 bg-gradient-to-br from-gray-100 to-gray-200 ">
+    <section className="py-16 bg-gradient-to-br from-gray-100 to-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        {/* "How It Works" Title in Gray */}
         <p className="text-lg font-semibold text-gray-500 tracking-wide mb-5">
           How It Works
         </p>
-
-        {/* Main Heading */}
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
           Easy steps to apply for Schemes
         </h2>
-
         <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8">
           {steps.map((step, index) => (
             <div
@@ -155,13 +154,10 @@ const HowItWorks = () => {
               <div className="w-16 h-16 flex items-center justify-center bg-[#001a33] rounded-full mb-4">
                 <step.icon className="w-8 h-8 text-white" />
               </div>
-
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {step.title}
               </h3>
               <p className="text-gray-600 text-center">{step.description}</p>
-
-              {/* Connector line between cards (visible only on desktop) */}
               {index < steps.length - 1 && (
                 <div className="hidden md:block absolute right-0 top-1/2 w-8 h-0.5 bg-gray-300 transform translate-x-full">
                   <div className="absolute right-0 -mt-1 w-2 h-2 rounded-full bg-gray-300"></div>
@@ -177,9 +173,8 @@ const HowItWorks = () => {
 
 function AboutUs() {
   return (
-    <section className="py-16 px-8 bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
+    <section id="about" className="py-16 px-8 bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-gray-800">
             About FindMyScholarship
@@ -187,11 +182,8 @@ function AboutUs() {
           <div className="w-24 h-1 bg-gradient-to-r from-blue-900 to-blue-400 mx-auto mt-3"></div>
         </div>
 
-        {/* Content */}
         <div className="grid md:grid-cols-2 gap-12 items-start">
-          {/* Text Content */}
           <div className="flex flex-col gap-8">
-            {/* Features Box */}
             <div className="bg-white p-8 rounded-xl shadow-lg">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                 What We Offer
@@ -247,7 +239,6 @@ function AboutUs() {
             </div>
           </div>
 
-          {/* Video Section */}
           <div className="flex flex-col gap-4">
             <div className="relative w-full pt-[56.25%] rounded-xl shadow-lg overflow-hidden">
               <iframe
@@ -362,9 +353,16 @@ const FAQ = () => {
 };
 
 const LandingPage = () => {
+  const scrollToAbout = () => {
+    const aboutSection = document.getElementById('about');
+    if (aboutSection) {
+      aboutSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div>
-      <Slideshow />
+      <Slideshow scrollToAbout={scrollToAbout} />
       <HowItWorks />
       <AboutUs />
       <FAQ />

@@ -6,7 +6,6 @@ import {
   Users, 
   Bell, 
   Settings,
-  FileText,
   PlusCircle,
   Trash2,
   Edit,
@@ -14,37 +13,40 @@ import {
   Eye,
   CheckCircle2,
   XCircle,
-  Search
+  Search,
+  X,
+  Calendar,
+  DollarSign,
+  Building,
+  FileText
 } from 'lucide-react';
 
-// Mock data for demonstration
-const scholarships = [
+// Mock data for scholarships/schemes
+const initialSchemes = [
   {
     id: 1,
-    title: "Merit Excellence Scholarship",
-    amount: "$5000",
+    name: "Merit Excellence Scholarship",
+    provider: "Government",
+    amount: 5000,
     deadline: "2024-05-15",
-    type: "merit-based",
-    status: "active",
+    description: "Scholarship for meritorious students",
     eligibility: {
-      minGPA: 3.5,
-      academicLevel: "Undergraduate",
-      fieldOfStudy: "Any",
-      familyIncome: "< $50,000"
+      income: "Below $50,000",
+      academics: "GPA 3.5+",
+      category: "All",
     }
   },
   {
     id: 2,
-    title: "Need-Based Support Grant",
-    amount: "$3000",
+    name: "Need-Based Grant",
+    provider: "NGO",
+    amount: 3000,
     deadline: "2024-06-01",
-    type: "need-based",
-    status: "inactive",
+    description: "Support for economically disadvantaged students",
     eligibility: {
-      minGPA: 3.0,
-      academicLevel: "Graduate",
-      fieldOfStudy: "STEM",
-      familyIncome: "< $30,000"
+      income: "Below $30,000",
+      academics: "GPA 3.0+",
+      category: "Undergraduate",
     }
   }
 ];
@@ -89,68 +91,351 @@ function Dashboard() {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [showNewScholarshipModal, setShowNewScholarshipModal] = useState(false);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [schemes, setSchemes] = useState(initialSchemes);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedScheme, setSelectedScheme] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    provider: 'Government',
+    amount: '',
+    deadline: '',
+    description: '',
+    eligibility: {
+      income: '',
+      academics: '',
+      category: ''
+    }
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name.startsWith('eligibility.')) {
+      const eligibilityField = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        eligibility: {
+          ...prev.eligibility,
+          [eligibilityField]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const handleAddScheme = (e) => {
+    e.preventDefault();
+    const newScheme = {
+      id: schemes.length + 1,
+      ...formData
+    };
+    setSchemes(prev => [...prev, newScheme]);
+    setShowAddModal(false);
+    setFormData({
+      name: '',
+      provider: 'Government',
+      amount: '',
+      deadline: '',
+      description: '',
+      eligibility: {
+        income: '',
+        academics: '',
+        category: ''
+      }
+    });
+  };
+
+  const handleEditScheme = (e) => {
+    e.preventDefault();
+    setSchemes(prev => prev.map(scheme => 
+      scheme.id === selectedScheme.id ? { ...formData, id: scheme.id } : scheme
+    ));
+    setShowEditModal(false);
+  };
+
+  const handleDeleteScheme = () => {
+    setSchemes(prev => prev.filter(scheme => scheme.id !== selectedScheme.id));
+    setShowDeleteModal(false);
+  };
+
+  const openEditModal = (scheme) => {
+    setSelectedScheme(scheme);
+    setFormData(scheme);
+    setShowEditModal(true);
+  };
+
+  const openDeleteModal = (scheme) => {
+    setSelectedScheme(scheme);
+    setShowDeleteModal(true);
+  };
+
+  const SchemeForm = ({ onSubmit, buttonText }) => (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Scheme Name</label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Provider</label>
+        <select
+          name="provider"
+          value={formData.provider}
+          onChange={handleInputChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        >
+          <option value="Government">Government</option>
+          <option value="NGO">NGO</option>
+          <option value="Private">Private</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Amount ($)</label>
+        <input
+          type="number"
+          name="amount"
+          value={formData.amount}
+          onChange={handleInputChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Deadline</label>
+        <input
+          type="date"
+          name="deadline"
+          value={formData.deadline}
+          onChange={handleInputChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description</label>
+        <textarea
+          name="description"
+          value={formData.description}
+          onChange={handleInputChange}
+          rows="3"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          required
+        />
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="font-medium text-gray-900">Eligibility Criteria</h3>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Income Criteria</label>
+          <input
+            type="text"
+            name="eligibility.income"
+            value={formData.eligibility.income}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Academic Requirements</label>
+          <input
+            type="text"
+            name="eligibility.academics"
+            value={formData.eligibility.academics}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Category</label>
+          <input
+            type="text"
+            name="eligibility.category"
+            value={formData.eligibility.category}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            setShowAddModal(false);
+            setShowEditModal(false);
+          }}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
+        >
+          {buttonText}
+        </button>
+      </div>
+    </form>
+  );
+
+  const renderScholarshipManager = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Edit Schemes</h2>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+        >
+          <PlusCircle className="w-5 h-5" />
+          Add New Scheme
+        </button>
+      </div>
+
+      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Scheme Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provider</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deadline</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {schemes.map((scheme) => (
+              <tr key={scheme.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">{scheme.name}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500">{scheme.provider}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">${scheme.amount}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500">{scheme.deadline}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditModal(scheme)}
+                      className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => openDeleteModal(scheme)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Add Scheme Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Add New Scheme</h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <SchemeForm onSubmit={handleAddScheme} buttonText="Add Scheme" />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Scheme Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Edit Scheme</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <SchemeForm onSubmit={handleEditScheme} buttonText="Update Scheme" />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Delete Scheme</h2>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-gray-500 mb-4">
+              Are you sure you want to delete "{selectedScheme?.name}"? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteScheme}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   const renderDashboardContent = () => {
     switch (activeSection) {
-      case 'scholarships':
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Manage Scholarships</h2>
-              <button 
-                onClick={() => setShowNewScholarshipModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-              >
-                <PlusCircle className="w-5 h-5" />
-                Add New Scholarship
-              </button>
-            </div>
-            
-            <div className="grid gap-6">
-              {scholarships.map(scholarship => (
-                <div key={scholarship.id} className="bg-white p-6 rounded-lg shadow-sm border">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold">{scholarship.title}</h3>
-                        <span className={`px-3 py-1 rounded-full text-sm ${
-                          scholarship.status === 'active' 
-                            ? 'bg-green-50 text-green-600' 
-                            : 'bg-red-50 text-red-600'
-                        }`}>
-                          {scholarship.status}
-                        </span>
-                      </div>
-                      <p className="text-gray-600 mt-1">Amount: {scholarship.amount}</p>
-                      <p className="text-gray-600">Deadline: {scholarship.deadline}</p>
-                      
-                      <div className="mt-4 grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Eligibility Criteria:</h4>
-                          <ul className="text-sm text-gray-600 space-y-1">
-                            <li>Min GPA: {scholarship.eligibility.minGPA}</li>
-                            <li>Level: {scholarship.eligibility.academicLevel}</li>
-                            <li>Field: {scholarship.eligibility.fieldOfStudy}</li>
-                            <li>Family Income: {scholarship.eligibility.familyIncome}</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <button className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg">
-                        <Edit className="w-5 h-5" />
-                      </button>
-                      <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+      case 'editSchemes':
+        return renderScholarshipManager();
       
       case 'students':
         return (
@@ -278,54 +563,51 @@ function Dashboard() {
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold">Dashboard Overview</h2>
             
-            <div className="grid grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow-sm border">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
-                    <Award className="w-6 h-6" />
+            <div className="grid grid-cols-3 gap-6">
+              <button 
+                onClick={() => setActiveSection('editSchemes')}
+                className="bg-white p-8 rounded-lg shadow-sm border hover:border-indigo-500 hover:shadow-md transition-all group"
+              >
+                <div className="flex flex-col items-center gap-4">
+                  <div className="p-4 bg-indigo-50 text-indigo-600 rounded-full group-hover:bg-indigo-100">
+                    <Edit className="w-8 h-8" />
                   </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Active Scholarships</div>
-                    <div className="text-2xl font-semibold">12</div>
+                  <div className="text-center">
+                    <div className="text-xl font-semibold text-gray-800">Edit Schemes</div>
+                    <div className="text-gray-500 mt-1">Manage scholarship schemes</div>
                   </div>
                 </div>
-              </div>
+              </button>
               
-              <div className="bg-white p-6 rounded-lg shadow-sm border">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-green-50 text-green-600 rounded-lg">
-                    <Users className="w-6 h-6" />
+              <button 
+                onClick={() => setActiveSection('scholarships')}
+                className="bg-white p-8 rounded-lg shadow-sm border hover:border-green-500 hover:shadow-md transition-all group"
+              >
+                <div className="flex flex-col items-center gap-4">
+                  <div className="p-4 bg-green-50 text-green-600 rounded-full group-hover:bg-green-100">
+                    <Award className="w-8 h-8" />
                   </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Registered Students</div>
-                    <div className="text-2xl font-semibold">245</div>
+                  <div className="text-center">
+                    <div className="text-xl font-semibold text-gray-800">Active Scholarships</div>
+                    <div className="text-gray-500 mt-1">View active scholarships</div>
                   </div>
                 </div>
-              </div>
+              </button>
               
-              <div className="bg-white p-6 rounded-lg shadow-sm border">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
-                    <FileText className="w-6 h-6" />
+              <button 
+                onClick={() => setActiveSection('students')}
+                className="bg-white p-8 rounded-lg shadow-sm border hover:border-yellow-500 hover:shadow-md transition-all group"
+              >
+                <div className="flex flex-col items-center gap-4">
+                  <div className="p-4 bg-yellow-50 text-yellow-600 rounded-full group-hover:bg-yellow-100">
+                    <Users className="w-8 h-8" />
                   </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Applications</div>
-                    <div className="text-2xl font-semibold">89</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow-sm border">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-red-50 text-red-600 rounded-lg">
-                    <Bell className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Pending Reviews</div>
-                    <div className="text-2xl font-semibold">15</div>
+                  <div className="text-center">
+                    <div className="text-xl font-semibold text-gray-800">Registered Students</div>
+                    <div className="text-gray-500 mt-1">Manage student registrations</div>
                   </div>
                 </div>
-              </div>
+              </button>
             </div>
             
             <div className="grid grid-cols-2 gap-6">

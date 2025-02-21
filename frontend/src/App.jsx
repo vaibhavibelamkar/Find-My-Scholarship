@@ -15,6 +15,7 @@ const appRouter = createBrowserRouter([
         <LandingPage />
       </>
     ),
+    
   },
   {
     path: "/user/dashboard",
