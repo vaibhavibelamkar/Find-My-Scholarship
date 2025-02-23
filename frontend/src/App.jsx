@@ -5,6 +5,8 @@ import UserDashboard from "./pages/user/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Login from "./components/Login";
+import Scheme from "./pages/user/Scheme";
+import ScholarshipForm from "./pages/user/ScholarshipForm";
 
 const appRouter = createBrowserRouter([
   {
@@ -42,7 +44,21 @@ const appRouter = createBrowserRouter([
         <Login />
       </>
     ),
-  },
+  },{
+    path: "/user/scheme",
+    element: (
+      <>
+        <Scheme/>
+      </>
+    ),
+  },{
+    path: "user/scholarshipForm",
+    element:(
+      <>
+      <ScholarshipForm/>
+      </>
+    )
+  }
   
 ]);
 
