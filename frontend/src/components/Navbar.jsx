@@ -1,8 +1,27 @@
 import React from "react";
-import { GraduationCap } from "lucide-react";
-import { Link } from "react-router-dom";
+import { GraduationCap, User, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useLogoutUserMutation } from "../auth/authApi.js";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 const Navbar = () => {
+  const { user } = useSelector((store) => store.auth);
+  const [logoutUser, { data, isSuccess }] = useLogoutUserMutation();
+  const navigate = useNavigate();
+
+  const logoutHandler = async () => {
+    await logoutUser();
+  };
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success(data.message || "User Log Out.");
+      navigate("/login");
+    }
+  }, [isSuccess, data, navigate]);
+
   return (
     <nav className="bg-[#001a33] shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -15,16 +34,38 @@ const Navbar = () => {
             </span>
           </div>
 
-          {/* Auth Buttons */}
+          {/* Auth Buttons or User Profile */}
           <div className="flex items-center space-x-4">
-            <Link to="/login">
-              <button className="px-4 py-2 text-white hover:text-[#242a4b] hover:bg-white rounded-md transition-colors duration-300">
-                Login
-              </button>
-            </Link>
-            <button className="px-4 py-2 bg-white text-[#001a33] rounded-md hover:bg-opacity-90 transition-colors duration-300 font-medium">
-              Sign Up
-            </button>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                    <User className="h-5 w-5 text-[#001a33]" />
+                  </div>
+                  <span className="text-white">{user.name || "User"}</span>
+                </div>
+                <button
+                  onClick={logoutHandler}
+                  className="flex items-center space-x-2 px-4 py-2 text-white hover:text-[#242a4b] hover:bg-white rounded-md transition-colors duration-300"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link to="/login">
+                  <button className="px-4 py-2 text-white hover:text-[#242a4b] hover:bg-white rounded-md transition-colors duration-300">
+                    Login
+                  </button>
+                </Link>
+                <Link to="/signup">
+                  <button className="px-4 py-2 bg-white text-[#001a33] rounded-md hover:bg-opacity-90 transition-colors duration-300 font-medium">
+                    Sign Up
+                  </button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -29,23 +29,6 @@ const scholarships = [
   },
 ];
 
-const appliedScholarships = [
-  {
-    id: 1,
-    title: "STEM Leaders Scholarship",
-    amount: "$4000",
-    appliedDate: "2024-02-15",
-    status: "pending",
-  },
-  {
-    id: 2,
-    title: "Future Engineers Fund",
-    amount: "$6000",
-    appliedDate: "2024-02-01",
-    status: "approved",
-  },
-];
-
 const news = [
   { id: 1, title: "New Government Scholarship Announced", date: "2024-03-01" },
   {
@@ -79,15 +62,15 @@ function Dashboard() {
               <button
                 key={type}
                 className={`w-full text-left p-1 rounded ${
-                  activeFilter === type ? "text-[#001a33]" : "text-gray-600"
+                  activeFilter === type ? "text-[#001a33]" : "text-gray-400"
                 }`}
                 onClick={() => setActiveFilter(type)}
               >
                 {type === "all"
-                  ? "All Scholarships"
+                  ? "Governmental"
                   : type === "merit"
-                  ? "Merit Based"
-                  : "Need Based"}
+                  ? "Non Governmental"
+                  : "Others"}
               </button>
             ))}
           </div>
@@ -170,34 +153,6 @@ function Dashboard() {
 
           {/* Right Sidebar */}
           <aside className="space-y-8">
-            {/* Applied Scholarships */}
-            <div className="bg-white p-6 rounded-lg border-gray-400 shadow-sm border">
-              <h2 className="text-lg font-semibold mb-4">
-                Applied Scholarships
-              </h2>
-              {appliedScholarships.map((scholarship) => (
-                <div
-                  key={scholarship.id}
-                  className="border-b last:border-b-0 pb-4 last:pb-0"
-                >
-                  <h3 className="font-medium">{scholarship.title}</h3>
-                  <p className="text-sm text-gray-600">
-                    Applied: {scholarship.appliedDate}
-                  </p>
-                  <span
-                    className={`inline-block mt-1 px-2 py-1 rounded-full text-xs ${
-                      scholarship.status === "approved"
-                        ? "bg-green-50 text-green-600"
-                        : "bg-yellow-50 text-yellow-600"
-                    }`}
-                  >
-                    {scholarship.status.charAt(0).toUpperCase() +
-                      scholarship.status.slice(1)}
-                  </span>
-                </div>
-              ))}
-            </div>
-
             {/* News & Updates */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-400">
               <h2 className="text-lg font-semibold mb-4">News & Updates</h2>
