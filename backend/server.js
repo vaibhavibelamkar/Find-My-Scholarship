@@ -25,7 +25,8 @@ app.use(
 );
 
 // API
-app.use("/api/v1/user", userRoute);
+app.use("/api/auth", userRoute);
+// app.use("/api/v1/user", userRoute);
 // app.use("/api/v1/course", courseRoute);
 // app.use("/api/v1/media", mediaRoute);
 // app.use("/api/v1/purchase", purchaseRoute);

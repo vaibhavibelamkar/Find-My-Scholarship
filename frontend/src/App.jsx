@@ -4,7 +4,7 @@ import LandingPage from "./components/LandingPage";
 import UserDashboard from "./pages/user/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Login from "./components/Login";
+import Login from "./components/Login.jsx";
 import Scheme from "./pages/user/Scheme";
 import ScholarshipForm from "./pages/user/ScholarshipForm";
 
@@ -17,7 +17,6 @@ const appRouter = createBrowserRouter([
         <LandingPage />
       </>
     ),
-    
   },
   {
     path: "/user/dashboard",
@@ -33,7 +32,7 @@ const appRouter = createBrowserRouter([
     element: (
       <>
         <Navbar />
-        <AdminDashboard/>
+        <AdminDashboard />
       </>
     ),
   },
@@ -44,22 +43,23 @@ const appRouter = createBrowserRouter([
         <Login />
       </>
     ),
-  },{
+  },
+  {
     path: "/user/scheme",
     element: (
       <>
-        <Scheme/>
+        <Scheme />
       </>
     ),
-  },{
+  },
+  {
     path: "user/scholarshipForm",
-    element:(
+    element: (
       <>
-      <ScholarshipForm/>
+        <ScholarshipForm />
       </>
-    )
-  }
-  
+    ),
+  },
 ]);
 
 function App() {

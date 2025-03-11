@@ -1,26 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { GraduationCap, User, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useLogoutUserMutation } from "../auth/authApi.js";
+// import { useLogoutUserMutation } from "../auth/authApi.js";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
 const Navbar = () => {
-  const { user } = useSelector((store) => store.auth);
-  const [logoutUser, { data, isSuccess }] = useLogoutUserMutation();
+  // const { user } = useSelector((store) => store.auth);
+  const [user, setUser] = useState(null);
+
   const navigate = useNavigate();
 
   const logoutHandler = async () => {
     await logoutUser();
   };
-
-  useEffect(() => {
-    if (isSuccess) {
-      toast.success(data.message || "User Log Out.");
-      navigate("/login");
-    }
-  }, [isSuccess, data, navigate]);
 
   return (
     <nav className="bg-[#001a33] shadow-lg">

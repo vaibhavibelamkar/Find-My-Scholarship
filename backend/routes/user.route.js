@@ -3,7 +3,7 @@ import { login, register } from "../controllers/user.controller.js";
 const router = express.Router();
 import isAuthenticated from "../middlewares/isAutheticated.js";
 
-router.route("/register").post(register);
+router.route("/signup").post(register);
 router.route("/login").post(login);
 // router.route("/logout").get(logout);
 // router.route("/dashboard").post(isAuthenticated, openDashboard);
