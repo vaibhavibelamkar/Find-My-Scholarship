@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 // import { useLogoutUserMutation } from "../auth/authApi.js";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { ArrowRight } from "lucide-react";
 
 const Navbar = () => {
   // const { user } = useSelector((store) => store.auth);
@@ -48,16 +49,12 @@ const Navbar = () => {
               </div>
             ) : (
               <>
-                <Link to="/login">
-                  <button className="px-4 py-2 text-white hover:text-[#242a4b] hover:bg-white rounded-md transition-colors duration-300">
-                    Login
-                  </button>
-                </Link>
-                <Link to="/signup">
-                  <button className="px-4 py-2 bg-white text-[#001a33] rounded-md hover:bg-opacity-90 transition-colors duration-300 font-medium">
-                    Sign Up
-                  </button>
-                </Link>
+               <Link to="/login">
+  <button className="px-4 py-2 text-white hover:text-[#242a4b] hover:bg-white rounded-md transition-colors duration-300 flex items-center gap-2">
+     SignIn <ArrowRight className="text-white" size={18} />
+  </button>
+</Link>
+              
               </>
             )}
           </div>

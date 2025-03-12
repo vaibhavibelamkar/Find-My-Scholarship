@@ -111,44 +111,47 @@ function Dashboard() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name.startsWith('eligibility.')) {
-      const eligibilityField = name.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        eligibility: {
-          ...prev.eligibility,
-          [eligibilityField]: value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-  };
-
-  const handleAddScheme = (e) => {
-    e.preventDefault();
-    const newScheme = {
-      id: schemes.length + 1,
-      ...formData
-    };
-    setSchemes(prev => [...prev, newScheme]);
-    setShowAddModal(false);
-    setFormData({
-      name: '',
-      provider: 'Government',
-      amount: '',
-      deadline: '',
-      description: '',
-      eligibility: {
-        income: '',
-        academics: '',
-        category: ''
+    
+    setFormData((prev) => {
+      if (name.startsWith("eligibility.")) {
+        const eligibilityField = name.split(".")[1];
+        return {
+          ...prev,
+          eligibility: {
+            ...prev.eligibility,
+            [eligibilityField]: value,
+          },
+        };
+      } else {
+        return {
+          ...prev,
+          [name]: value,
+        };
       }
     });
   };
+  
+  
+
+
+const handleAddScheme = (newScheme) => {
+  setSchemes((prevSchemes) => [...prevSchemes, newScheme]);
+  setShowAddModal(false);
+  setFormData({
+    name: '',
+    provider: 'Government',
+    amount: '',
+    deadline: '',
+    description: '',
+    eligibility: {
+      income: '',
+      academics: '',
+      category: '',
+    },
+  });
+};
+
+  
 
   const handleEditScheme = (e) => {
     e.preventDefault();
@@ -176,128 +179,160 @@ function Dashboard() {
 
   const SchemeForm = ({ onSubmit, buttonText }) => (
     <form onSubmit={onSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Scheme Name</label>
-        <input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Provider</label>
-        <select
-          name="provider"
-          value={formData.provider}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-        >
-          <option value="Government">Government</option>
-          <option value="NGO">NGO</option>
-          <option value="Private">Private</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Amount ($)</label>
-        <input
-          type="number"
-          name="amount"
-          value={formData.amount}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Deadline</label>
-        <input
-          type="date"
-          name="deadline"
-          value={formData.deadline}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Description</label>
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={handleInputChange}
-          rows="3"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">Eligibility Criteria</h3>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Income Criteria</label>
-          <input
-            type="text"
-            name="eligibility.income"
-            value={formData.eligibility.income}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Academic Requirements</label>
-          <input
-            type="text"
-            name="eligibility.academics"
-            value={formData.eligibility.academics}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Category</label>
-          <input
-            type="text"
-            name="eligibility.category"
-            value={formData.eligibility.category}
-            onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            required
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-3">
-        <button
-          type="button"
-          onClick={() => {
-            setShowAddModal(false);
-            setShowEditModal(false);
-          }}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
-        >
-          {buttonText}
-        </button>
-      </div>
-    </form>
-  );
+    {/* Scheme Name */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Scheme Name</label>
+      <input
+        type="text"
+        name="schemeName"
+        value={formData.schemeName}
+        onChange={handleInputChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        required
+      />
+    </div>
+  
+    {/* Gender */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Gender</label>
+      <select
+        name="gender"
+        value={formData.gender}
+        onChange={handleInputChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        required
+      >
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+  
+    {/* State */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">State</label>
+      <input
+        type="text"
+        name="state"
+        value={formData.state}
+        onChange={handleInputChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        required
+      />
+    </div>
+  
+    {/* Area of Residence */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Area of Residence</label>
+      <input
+        type="text"
+        name="areaOfResidence"
+        value={formData.areaOfResidence}
+        onChange={handleInputChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        required
+      />
+    </div>
+  
+    {/* Caste Category */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Caste Category</label>
+      <input
+        type="text"
+        name="casteCategory"
+        value={formData.casteCategory}
+        onChange={handleInputChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        required
+      />
+    </div>
+  
+    {/* Annual Income */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Annual Income</label>
+      <input
+        type="number"
+        name="annualIncome"
+        value={formData.annualIncome}
+        onChange={handleInputChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        required
+      />
+    </div>
+  
+    {/* Religion */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Religion</label>
+      <input
+        type="text"
+        name="religion"
+        value={formData.religion}
+        onChange={handleInputChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        required
+      />
+    </div>
+  
+    {/* Benefits */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Benefits</label>
+      <input
+        type="text"
+        name="benefits"
+        value={formData.benefits}
+        onChange={handleInputChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        required
+      />
+    </div>
+  
+    {/* Scheme Documents */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Scheme Documents</label>
+      <input
+        type="text"
+        name="schemeDocuments"
+        value={formData.schemeDocuments}
+        onChange={handleInputChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        required
+      />
+    </div>
+  
+    {/* Site Link */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">Site Link</label>
+      <input
+        type="url"
+        name="siteLink"
+        value={formData.siteLink}
+        onChange={handleInputChange}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        required
+      />
+    </div>
+  
+    {/* Action Buttons */}
+    <div className="flex justify-end gap-3">
+      <button
+        type="button"
+        onClick={() => {
+          setShowAddModal(false);
+          setShowEditModal(false);
+        }}
+        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
+      >
+        {buttonText}
+      </button>
+    </div>
+  </form>
+  );  
 
   const renderScholarshipManager = () => (
     <div className="space-y-6">
@@ -305,7 +340,7 @@ function Dashboard() {
         <h2 className="text-2xl font-semibold">Edit Schemes</h2>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          className="flex items-center gap-2 px-4 py-2 bg-[#002b4d] text-white rounded-lg hover:bg-[#002b4d]"
         >
           <PlusCircle className="w-5 h-5" />
           Add New Scheme
@@ -362,15 +397,16 @@ function Dashboard() {
 
       {/* Add Scheme Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+        <div className="fixed inset-0 text-[#002b4d] bg-opacity-75 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Add New Scheme</h2>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-[#002b4d] hover:text-gray-500"
               >
                 <X className="w-5 h-5" />
+                
               </button>
             </div>
             <SchemeForm onSubmit={handleAddScheme} buttonText="Add Scheme" />
@@ -386,7 +422,7 @@ function Dashboard() {
               <h2 className="text-xl font-semibold">Edit Scheme</h2>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-[#002b4d] hover:text-gray-500"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -654,7 +690,7 @@ function Dashboard() {
       {/* Sidebar */}
       <div className="w-64 bg-white shadow-lg">
         <div className="p-4">
-          <h1 className="text-xl font-bold flex items-center gap-2 text-indigo-600">
+          <h1 className="text-xl font-bold flex items-center gap-2 text-[#002b4d]">
             <GraduationCap className="w-6 h-6" />
             Admin Dashboard
           </h1>

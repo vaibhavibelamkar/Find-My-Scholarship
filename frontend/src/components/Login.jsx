@@ -189,10 +189,10 @@ const Login = () => {
                 Email
               </label>
               <div className="relative group">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-900" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#002b4d]" />
                 <input
                   type="email"
-                  className={`block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] bg-white/60 backdrop-blur-sm transition-all`}
+                  className={`block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] bg-white/60 `}
                   placeholder="Enter your email"
                   value={signupInput.email}
                   onChange={(e) =>
@@ -214,11 +214,11 @@ const Login = () => {
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400 group-focus-within:text-[#001a33]" />
+                  <User className="h-5 w-5 text-[#002b4d] group-focus-within:text-[#001a33]" />
                 </div>
                 <input
                   type="text"
-                  className={`block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] bg-white/60 backdrop-blur-sm transition-all`}
+                  className={`block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] `}
                   placeholder="Choose a username"
                   value={signupInput.username}
                   onChange={(e) =>
@@ -239,12 +239,12 @@ const Login = () => {
                 Password
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-[#001a33]" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none ">
+                  <Lock className="h-5 w-5 text-[#002b4d] group-focus-within:text-[#001a33]" />
                 </div>
                 <input
                   type="password"
-                  className={`block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] bg-white/60 backdrop-blur-sm transition-all`}
+                  className={`block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] `}
                   placeholder="Create a password"
                   value={signupInput.password}
                   onChange={(e) =>
@@ -266,11 +266,11 @@ const Login = () => {
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-[#001a33]" />
+                  <Lock className="h-5 w-5 text-[#002b4d] group-focus-within:text-[#001a33]" />
                 </div>
                 <input
                   type="password"
-                  className={`block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] bg-white/60 backdrop-blur-sm transition-all`}
+                  className={`block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] `}
                   placeholder="Confirm your password"
                   value={signupInput.confirmPassword}
                   onChange={(e) =>
