@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Mail, Lock, User, LogIn, UserPlus } from "lucide-react";
+import { Mail, Lock, User, LogIn, UserPlus, CheckCircle } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+
 const Login = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [loginInput, setLoginInput] = useState({ email: "", password: "" });
@@ -24,6 +25,12 @@ const Login = () => {
     email: "",
     password: "",
   });
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetEmailError, setResetEmailError] = useState("");
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const validateSignupForm = () => {
     const errors = {
       email: "",
@@ -33,6 +40,8 @@ const Login = () => {
     };
 
     if (!signupInput.email) errors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(signupInput.email)) errors.email = "Please enter a valid email address";
+    
     if (!signupInput.username) errors.username = "Username is required";
     if (!signupInput.password) errors.password = "Password is required";
     else if (signupInput.password.length < 6)
@@ -47,6 +56,7 @@ const Login = () => {
 
     return Object.values(errors).every((error) => error === "");
   };
+
   const validateLoginForm = () => {
     const errors = {
       email: "",
@@ -60,34 +70,114 @@ const Login = () => {
 
     return Object.values(errors).every((error) => error === "");
   };
+
   const handleRegistration = async (type) => {
     try {
       if (type === "signup" && !validateSignupForm()) return;
       if (type === "login" && !validateLoginForm()) return;
+
+      setIsLoading(true);
   
-      const API_BASE_URL = "http://localhost:8080/api";
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
       const endpoint = type === "login" ? "/auth/login" : "/auth/signup";
       const payload = type === "login" ? loginInput : signupInput;
   
       const response = await axios.post(`${API_BASE_URL}${endpoint}`, payload, {
-        withCredentials: true // ✅ Enables cookies
-    });
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
     
-  
-      // ✅ Ensure the API response indicates success
       if (response.data?.success) {
+        if (type === "signup") {
+          setVerificationSent(true);
+          toast.success("Verification email sent! Please check your inbox and spam folder.");
+        } else {
+          if (!response.data.verified) {
+            toast.error("Please verify your email before logging in");
+            return;
+          }
           toast.success(response.data.message);
-          if (type === "login") navigate("/user/dashboard");
+          navigate("/user/dashboard");
+        }
       } else {
-          // Handle failed login/signup response
-          toast.error(response.data.message || "Invalid credentials. Please try again.");
+        toast.error(response.data.message || "Invalid credentials. Please try again.");
       }
-  } catch (error) {
-      // ✅ Improved Error Handling: Show specific backend error messages if available
-      const errorMessage = error.response?.data?.message || "An error occurred. Please try again.";
+    } catch (error) {
+      console.error('Registration error:', error);
+      const errorMessage = error.response?.data?.message || 
+        (error.code === 'ERR_NETWORK' ? "Network error. Please check your connection." : "An error occurred. Please try again.");
       toast.error(errorMessage);
-  }
-  
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetEmail) {
+      setResetEmailError("Email is required");
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(resetEmail)) {
+      setResetEmailError("Please enter a valid email address");
+      return;
+    }
+    setResetEmailError("");
+
+    try {
+      setIsLoading(true);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+      const response = await axios.post(`${API_BASE_URL}/auth/reset-password`, {
+        email: resetEmail
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data?.success) {
+        toast.success("Reset link has been sent to your email");
+        setShowForgotPassword(false);
+        setResetEmail("");
+      } else {
+        toast.error(response.data.message || "Failed to send reset link");
+      }
+    } catch (error) {
+      console.error('Reset password error:', error);
+      const errorMessage = error.response?.data?.message || 
+        (error.code === 'ERR_NETWORK' ? "Network error. Please check your connection." : "Failed to send reset link");
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendVerification = async () => {
+    try {
+      setIsLoading(true);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+      const response = await axios.post(`${API_BASE_URL}/auth/resend-verification`, {
+        email: signupInput.email
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data?.success) {
+        toast.success("Verification email has been resent. Please check your inbox and spam folder.");
+      } else {
+        toast.error(response.data.message || "Failed to resend verification email");
+      }
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      const errorMessage = error.response?.data?.message || 
+        (error.code === 'ERR_NETWORK' ? "Network error. Please check your connection." : "Failed to resend verification email");
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -107,6 +197,10 @@ const Login = () => {
     }));
   }, [signupInput, loginInput]);
 
+  const buttonClass = `w-full py-3 rounded-lg transition-all duration-200 font-medium ${
+    isLoading ? 'opacity-70 cursor-not-allowed' : ''
+  }`;
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 via-white to-indigo-100">
       <div className="max-w-md w-full bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-indigo-50">
@@ -124,7 +218,12 @@ const Login = () => {
                 ? "bg-white text-[#001a33] shadow-sm"
                 : "text-gray-600 hover:text-[#001a33]"
             }`}
-            onClick={() => setActiveTab("login")}
+            onClick={() => {
+              setActiveTab("login");
+              setShowForgotPassword(false);
+              setVerificationSent(false);
+            }}
+            disabled={isLoading}
           >
             <LogIn className="h-4 w-4" /> Login
           </button>
@@ -134,13 +233,100 @@ const Login = () => {
                 ? "bg-white text-[#001a33] shadow-sm"
                 : "text-gray-600 hover:text-[#001a33]"
             }`}
-            onClick={() => setActiveTab("signup")}
+            onClick={() => {
+              setActiveTab("signup");
+              setShowForgotPassword(false);
+              setVerificationSent(false);
+            }}
+            disabled={isLoading}
           >
             <UserPlus className="h-4 w-4" /> Sign Up
           </button>
         </div>
+
+        {/* Email Verification Sent */}
+        {verificationSent && (
+          <div className="space-y-6">
+            <div className="text-center">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-[#001a33] mb-2">Verify your email</h2>
+              <p className="text-gray-600">
+                We've sent a verification link to <span className="font-medium">{signupInput.email}</span>
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Please check your inbox and spam folder, then click the link to verify your account
+              </p>
+            </div>
+            <div className="space-y-4">
+              <button
+                onClick={resendVerification}
+                className={`${buttonClass} text-[#001a33] hover:bg-indigo-50 border border-[#001a33]`}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Sending...' : 'Resend verification email'}
+              </button>
+              <button
+                onClick={() => {
+                  setVerificationSent(false);
+                  setActiveTab("login");
+                }}
+                className={`${buttonClass} text-[#001a33] hover:bg-indigo-50`}
+                disabled={isLoading}
+              >
+                Back to Login
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Forgot Password Form */}
+        {showForgotPassword && !verificationSent && (
+          <div className="space-y-6">
+            <div className="text-center mb-4">
+              <h2 className="text-xl font-semibold text-[#001a33]">Reset Password</h2>
+              <p className="text-gray-600 text-sm mt-1">Enter your email to receive a reset link</p>
+            </div>
+            <div>
+              <div className="relative group">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-900" />
+                <input
+                  type="email"
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#001a33]"
+                  placeholder="Enter your email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              {resetEmailError && (
+                <p className="text-red-500 text-sm mt-1">{resetEmailError}</p>
+              )}
+            </div>
+            <div className="space-y-4">
+              <button
+                onClick={handleResetPassword}
+                className={`${buttonClass} bg-[#001a33] text-white hover:bg-[#002b4d]`}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Sending...' : 'Send Reset Link'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setResetEmail("");
+                  setResetEmailError("");
+                }}
+                className={`${buttonClass} text-[#001a33] hover:bg-indigo-50`}
+                disabled={isLoading}
+              >
+                Back to Login
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Login Form */}
-        {activeTab === "login" && (
+        {activeTab === "login" && !showForgotPassword && !verificationSent && (
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -156,6 +342,7 @@ const Login = () => {
                   onChange={(e) =>
                     setLoginInput({ ...loginInput, email: e.target.value })
                   }
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -164,9 +351,12 @@ const Login = () => {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                
+              </div>
               <div className="relative group">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-900" />
                 <input
@@ -177,9 +367,17 @@ const Login = () => {
                   onChange={(e) =>
                     setLoginInput({ ...loginInput, password: e.target.value })
                   }
+                  disabled={isLoading}
                   required
                 />
               </div>
+              <button
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-[#001a33] hover:underline"
+                  disabled={isLoading}
+                >
+                  Forgot Password?
+                </button>
               {loginErrors.password && (
                 <p className="text-red-500 text-sm mt-1">
                   {loginErrors.password}
@@ -188,14 +386,16 @@ const Login = () => {
             </div>
             <button
               onClick={() => handleRegistration("login")}
-              className="w-full bg-[#001a33] text-white py-3 rounded-lg hover:bg-[#002b4d]"
+              className={`${buttonClass} bg-[#001a33] text-white hover:bg-[#002b4d]`}
+              disabled={isLoading}
             >
-              Sign in to your account
+              {isLoading ? 'Signing in...' : 'Sign in to your account'}
             </button>
           </div>
         )}
+
         {/* Sign Up Form */}
-        {activeTab === "signup" && (
+        {activeTab === "signup" && !showForgotPassword && !verificationSent && (
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -211,6 +411,7 @@ const Login = () => {
                   onChange={(e) =>
                     setSignupInput({ ...signupInput, email: e.target.value })
                   }
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -237,6 +438,7 @@ const Login = () => {
                   onChange={(e) =>
                     setSignupInput({ ...signupInput, username: e.target.value })
                   }
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -263,6 +465,7 @@ const Login = () => {
                   onChange={(e) =>
                     setSignupInput({ ...signupInput, password: e.target.value })
                   }
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -292,6 +495,7 @@ const Login = () => {
                       confirmPassword: e.target.value,
                     })
                   }
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -305,9 +509,10 @@ const Login = () => {
             <div className="space-y-4">
               <button
                 onClick={() => handleRegistration("signup")}
-                className="w-full bg-[#001a33] text-white py-3 px-4 rounded-lg hover:bg-[#001a33] focus:outline-none focus:ring-2 focus:ring-[#001a33] focus:ring-offset-2 transition-all duration-200 font-medium"
+                className={`${buttonClass} bg-[#001a33] text-white hover:bg-[#001a33] focus:ring-2 focus:ring-[#001a33] focus:ring-offset-2`}
+                disabled={isLoading}
               >
-                Create your account
+                {isLoading ? 'Creating account...' : 'Create your account'}
               </button>
               <p className="text-sm text-center text-gray-600">
                 By signing up, you agree to our{" "}
