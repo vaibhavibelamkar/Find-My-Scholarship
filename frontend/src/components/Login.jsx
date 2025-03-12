@@ -64,17 +64,30 @@ const Login = () => {
     try {
       if (type === "signup" && !validateSignupForm()) return;
       if (type === "login" && !validateLoginForm()) return;
+  
       const API_BASE_URL = "http://localhost:8080/api";
       const endpoint = type === "login" ? "/auth/login" : "/auth/signup";
       const payload = type === "login" ? loginInput : signupInput;
-      const response = await axios.post(`${API_BASE_URL}${endpoint}`, payload);
-      if (response.data) {
-        toast.success(response.data.message);
-        if (type === "login") navigate("/user/dashboard");
+  
+      const response = await axios.post(`${API_BASE_URL}${endpoint}`, payload, {
+        withCredentials: true // ✅ Enables cookies
+    });
+    
+  
+      // ✅ Ensure the API response indicates success
+      if (response.data?.success) {
+          toast.success(response.data.message);
+          if (type === "login") navigate("/user/dashboard");
+      } else {
+          // Handle failed login/signup response
+          toast.error(response.data.message || "Invalid credentials. Please try again.");
       }
-    } catch (error) {
-      toast.error("An error occurred. Please try again.");
-    }
+  } catch (error) {
+      // ✅ Improved Error Handling: Show specific backend error messages if available
+      const errorMessage = error.response?.data?.message || "An error occurred. Please try again.";
+      toast.error(errorMessage);
+  }
+  
   };
 
   useEffect(() => {
