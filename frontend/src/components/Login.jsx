@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Mail, Lock, User, LogIn, UserPlus, CheckCircle } from "lucide-react";
+import { Mail, Lock, User, LogIn, UserPlus } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +28,6 @@ const Login = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetEmailError, setResetEmailError] = useState("");
-  const [verificationSent, setVerificationSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const validateSignupForm = () => {
@@ -93,16 +92,10 @@ const Login = () => {
 
       if (response.data?.success) {
         if (type === "signup") {
-          setVerificationSent(true);
-          toast.success(
-            "Verification email sent! Please check your inbox and spam folder."
-          );
+          toast.success("Account created successfully!");
+          setActiveTab("login");
         } else {
-          if (!response.data.verified) {
-            toast.error("Please verify your email before logging in");
-            return;
-          }
-          toast.success(response.data.message);
+          toast.success(response.data.message || "Login successful!");
           navigate("/user/dashboard");
         }
       } else {
@@ -170,45 +163,6 @@ const Login = () => {
     }
   };
 
-  const resendVerification = async () => {
-    try {
-      setIsLoading(true);
-      const API_BASE_URL =
-        import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-      const response = await axios.post(
-        `${API_BASE_URL}/auth/resend-verification`,
-        {
-          email: signupInput.email,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.data?.success) {
-        toast.success(
-          "Verification email has been resent. Please check your inbox and spam folder."
-        );
-      } else {
-        toast.error(
-          response.data.message || "Failed to resend verification email"
-        );
-      }
-    } catch (error) {
-      console.error("Resend verification error:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        (error.code === "ERR_NETWORK"
-          ? "Network error. Please check your connection."
-          : "Failed to resend verification email");
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     setSignupErrors((prevErrors) => ({
       ...prevErrors,
@@ -250,7 +204,6 @@ const Login = () => {
             onClick={() => {
               setActiveTab("login");
               setShowForgotPassword(false);
-              setVerificationSent(false);
             }}
             disabled={isLoading}
           >
@@ -265,7 +218,6 @@ const Login = () => {
             onClick={() => {
               setActiveTab("signup");
               setShowForgotPassword(false);
-              setVerificationSent(false);
             }}
             disabled={isLoading}
           >
@@ -273,47 +225,8 @@ const Login = () => {
           </button>
         </div>
 
-        {/* Email Verification Sent */}
-        {verificationSent && (
-          <div className="space-y-6">
-            <div className="text-center">
-              <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-[#001a33] mb-2">
-                Verify your email
-              </h2>
-              <p className="text-gray-600">
-                We've sent a verification link to{" "}
-                <span className="font-medium">{signupInput.email}</span>
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                Please check your inbox and spam folder, then click the link to
-                verify your account
-              </p>
-            </div>
-            <div className="space-y-4">
-              <button
-                onClick={resendVerification}
-                className={`${buttonClass} text-[#001a33] hover:bg-indigo-50 border border-[#001a33]`}
-                disabled={isLoading}
-              >
-                {isLoading ? "Sending..." : "Resend verification email"}
-              </button>
-              <button
-                onClick={() => {
-                  setVerificationSent(false);
-                  setActiveTab("login");
-                }}
-                className={`${buttonClass} text-[#001a33] hover:bg-indigo-50`}
-                disabled={isLoading}
-              >
-                Back to Login
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Forgot Password Form */}
-        {showForgotPassword && !verificationSent && (
+        {showForgotPassword && (
           <div className="space-y-6">
             <div className="text-center mb-4">
               <h2 className="text-xl font-semibold text-[#001a33]">
@@ -363,7 +276,7 @@ const Login = () => {
         )}
 
         {/* Login Form */}
-        {activeTab === "login" && !showForgotPassword && !verificationSent && (
+        {activeTab === "login" && !showForgotPassword && (
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -431,7 +344,7 @@ const Login = () => {
         )}
 
         {/* Sign Up Form */}
-        {activeTab === "signup" && !showForgotPassword && !verificationSent && (
+        {activeTab === "signup" && !showForgotPassword && (
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
