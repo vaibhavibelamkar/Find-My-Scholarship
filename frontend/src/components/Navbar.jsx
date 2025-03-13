@@ -1,20 +1,43 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { GraduationCap, User, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-// import { useLogoutUserMutation } from "../auth/authApi.js";
-import { useEffect } from "react";
-import { toast } from "sonner";
 import { ArrowRight } from "lucide-react";
+import { jwtDecode } from "jwt-decode"; // To decode JWT tokens
 
 const Navbar = () => {
-  // const { user } = useSelector((store) => store.auth);
   const [user, setUser] = useState(null);
-
   const navigate = useNavigate();
 
-  const logoutHandler = async () => {
-    await logoutUser();
+  // Function to get cookie value
+  const getCookie = (name) => {
+    const cookies = document.cookie.split("; ");
+    console.log(cookies);
+    for (let cookie of cookies) {
+      const [key, value] = cookie.split("=");
+      if (key === name) return value;
+    }
+    return null;
+  };
+
+  // Function to check if user is logged in
+  useEffect(() => {
+    const token = getCookie("token"); // Read token from cookie
+    if (token) {
+      try {
+        const decoded = jwtDecode(token); // Decode token
+        setUser({ name: decoded.name }); // Set user state
+      } catch (error) {
+        console.error("Invalid token", error);
+        setUser(null);
+      }
+    }
+  }, []);
+
+  // Logout handler
+  const logoutHandler = () => {
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    setUser(null);
+    navigate("/login");
   };
 
   return (
@@ -48,14 +71,11 @@ const Navbar = () => {
                 </button>
               </div>
             ) : (
-              <>
-               <Link to="/login">
-  <button className="px-4 py-2 text-white hover:text-[#242a4b] hover:bg-white rounded-md transition-colors duration-300 flex items-center gap-2">
-     SignIn <ArrowRight className="text-white" size={18} />
-  </button>
-</Link>
-              
-              </>
+              <Link to="/login">
+                <button className="px-4 py-2 font-semibold text-white hover:text-[#242a4b] hover:bg-white rounded-md transition-colors duration-300 flex items-center gap-2">
+                  SignIn <ArrowRight className="text-white" size={20} />
+                </button>
+              </Link>
             )}
           </div>
         </div>

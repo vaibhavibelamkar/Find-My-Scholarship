@@ -7,6 +7,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Login from "./components/Login.jsx";
 import Scheme from "./pages/user/Scheme";
 import ScholarshipForm from "./pages/user/ScholarshipForm";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 const appRouter = createBrowserRouter([
   {
@@ -23,6 +24,7 @@ const appRouter = createBrowserRouter([
     element: (
       <>
         <Navbar />
+        {/* <ProtectedRoute element={<UserDashboard />} /> */}
         <UserDashboard />
       </>
     ),
@@ -32,6 +34,7 @@ const appRouter = createBrowserRouter([
     element: (
       <>
         <Navbar />
+        {/* <ProtectedRoute element={<AdminDashboard />} /> */}
         <AdminDashboard />
       </>
     ),
@@ -48,6 +51,7 @@ const appRouter = createBrowserRouter([
     path: "/user/scheme",
     element: (
       <>
+        {/* <ProtectedRoute element={<Scheme />} /> */}
         <Scheme />
       </>
     ),
@@ -56,6 +60,7 @@ const appRouter = createBrowserRouter([
     path: "user/scholarshipForm",
     element: (
       <>
+        {/* <ProtectedRoute element={<ScholarshipForm />} />, */}
         <ScholarshipForm />
       </>
     ),

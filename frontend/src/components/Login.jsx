@@ -40,8 +40,9 @@ const Login = () => {
     };
 
     if (!signupInput.email) errors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(signupInput.email)) errors.email = "Please enter a valid email address";
-    
+    else if (!/\S+@\S+\.\S+/.test(signupInput.email))
+      errors.email = "Please enter a valid email address";
+
     if (!signupInput.username) errors.username = "Username is required";
     if (!signupInput.password) errors.password = "Password is required";
     else if (signupInput.password.length < 6)
@@ -77,22 +78,25 @@ const Login = () => {
       if (type === "login" && !validateLoginForm()) return;
 
       setIsLoading(true);
-  
-      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
+      const API_BASE_URL =
+        import.meta.env.VITE_API_URL || "http://localhost:8080/api";
       const endpoint = type === "login" ? "/auth/login" : "/auth/signup";
       const payload = type === "login" ? loginInput : signupInput;
-  
+
       const response = await axios.post(`${API_BASE_URL}${endpoint}`, payload, {
         withCredentials: true,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       });
-    
+
       if (response.data?.success) {
         if (type === "signup") {
           setVerificationSent(true);
-          toast.success("Verification email sent! Please check your inbox and spam folder.");
+          toast.success(
+            "Verification email sent! Please check your inbox and spam folder."
+          );
         } else {
           if (!response.data.verified) {
             toast.error("Please verify your email before logging in");
@@ -102,12 +106,17 @@ const Login = () => {
           navigate("/user/dashboard");
         }
       } else {
-        toast.error(response.data.message || "Invalid credentials. Please try again.");
+        toast.error(
+          response.data.message || "Invalid credentials. Please try again."
+        );
       }
     } catch (error) {
-      console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 
-        (error.code === 'ERR_NETWORK' ? "Network error. Please check your connection." : "An error occurred. Please try again.");
+      console.error("Registration error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        (error.code === "ERR_NETWORK"
+          ? "Network error. Please check your connection."
+          : "An error occurred. Please try again.");
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -127,14 +136,19 @@ const Login = () => {
 
     try {
       setIsLoading(true);
-      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-      const response = await axios.post(`${API_BASE_URL}/auth/reset-password`, {
-        email: resetEmail
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
+      const API_BASE_URL =
+        import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/reset-password`,
+        {
+          email: resetEmail,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.data?.success) {
         toast.success("Reset link has been sent to your email");
@@ -144,9 +158,12 @@ const Login = () => {
         toast.error(response.data.message || "Failed to send reset link");
       }
     } catch (error) {
-      console.error('Reset password error:', error);
-      const errorMessage = error.response?.data?.message || 
-        (error.code === 'ERR_NETWORK' ? "Network error. Please check your connection." : "Failed to send reset link");
+      console.error("Reset password error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        (error.code === "ERR_NETWORK"
+          ? "Network error. Please check your connection."
+          : "Failed to send reset link");
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -156,24 +173,36 @@ const Login = () => {
   const resendVerification = async () => {
     try {
       setIsLoading(true);
-      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-      const response = await axios.post(`${API_BASE_URL}/auth/resend-verification`, {
-        email: signupInput.email
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
+      const API_BASE_URL =
+        import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/resend-verification`,
+        {
+          email: signupInput.email,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (response.data?.success) {
-        toast.success("Verification email has been resent. Please check your inbox and spam folder.");
+        toast.success(
+          "Verification email has been resent. Please check your inbox and spam folder."
+        );
       } else {
-        toast.error(response.data.message || "Failed to resend verification email");
+        toast.error(
+          response.data.message || "Failed to resend verification email"
+        );
       }
     } catch (error) {
-      console.error('Resend verification error:', error);
-      const errorMessage = error.response?.data?.message || 
-        (error.code === 'ERR_NETWORK' ? "Network error. Please check your connection." : "Failed to resend verification email");
+      console.error("Resend verification error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        (error.code === "ERR_NETWORK"
+          ? "Network error. Please check your connection."
+          : "Failed to resend verification email");
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -198,7 +227,7 @@ const Login = () => {
   }, [signupInput, loginInput]);
 
   const buttonClass = `w-full py-3 rounded-lg transition-all duration-200 font-medium ${
-    isLoading ? 'opacity-70 cursor-not-allowed' : ''
+    isLoading ? "opacity-70 cursor-not-allowed" : ""
   }`;
 
   return (
@@ -249,12 +278,16 @@ const Login = () => {
           <div className="space-y-6">
             <div className="text-center">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-[#001a33] mb-2">Verify your email</h2>
+              <h2 className="text-xl font-semibold text-[#001a33] mb-2">
+                Verify your email
+              </h2>
               <p className="text-gray-600">
-                We've sent a verification link to <span className="font-medium">{signupInput.email}</span>
+                We've sent a verification link to{" "}
+                <span className="font-medium">{signupInput.email}</span>
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                Please check your inbox and spam folder, then click the link to verify your account
+                Please check your inbox and spam folder, then click the link to
+                verify your account
               </p>
             </div>
             <div className="space-y-4">
@@ -263,7 +296,7 @@ const Login = () => {
                 className={`${buttonClass} text-[#001a33] hover:bg-indigo-50 border border-[#001a33]`}
                 disabled={isLoading}
               >
-                {isLoading ? 'Sending...' : 'Resend verification email'}
+                {isLoading ? "Sending..." : "Resend verification email"}
               </button>
               <button
                 onClick={() => {
@@ -283,8 +316,12 @@ const Login = () => {
         {showForgotPassword && !verificationSent && (
           <div className="space-y-6">
             <div className="text-center mb-4">
-              <h2 className="text-xl font-semibold text-[#001a33]">Reset Password</h2>
-              <p className="text-gray-600 text-sm mt-1">Enter your email to receive a reset link</p>
+              <h2 className="text-xl font-semibold text-[#001a33]">
+                Reset Password
+              </h2>
+              <p className="text-gray-600 text-sm mt-1">
+                Enter your email to receive a reset link
+              </p>
             </div>
             <div>
               <div className="relative group">
@@ -308,7 +345,7 @@ const Login = () => {
                 className={`${buttonClass} bg-[#001a33] text-white hover:bg-[#002b4d]`}
                 disabled={isLoading}
               >
-                {isLoading ? 'Sending...' : 'Send Reset Link'}
+                {isLoading ? "Sending..." : "Send Reset Link"}
               </button>
               <button
                 onClick={() => {
@@ -355,7 +392,6 @@ const Login = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                
               </div>
               <div className="relative group">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-900" />
@@ -372,12 +408,12 @@ const Login = () => {
                 />
               </div>
               <button
-                  onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-[#001a33] hover:underline"
-                  disabled={isLoading}
-                >
-                  Forgot Password?
-                </button>
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-[#001a33] hover:underline"
+                disabled={isLoading}
+              >
+                Forgot Password?
+              </button>
               {loginErrors.password && (
                 <p className="text-red-500 text-sm mt-1">
                   {loginErrors.password}
@@ -389,7 +425,7 @@ const Login = () => {
               className={`${buttonClass} bg-[#001a33] text-white hover:bg-[#002b4d]`}
               disabled={isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign in to your account'}
+              {isLoading ? "Signing in..." : "Sign in to your account"}
             </button>
           </div>
         )}
@@ -512,7 +548,7 @@ const Login = () => {
                 className={`${buttonClass} bg-[#001a33] text-white hover:bg-[#001a33] focus:ring-2 focus:ring-[#001a33] focus:ring-offset-2`}
                 disabled={isLoading}
               >
-                {isLoading ? 'Creating account...' : 'Create your account'}
+                {isLoading ? "Creating account..." : "Create your account"}
               </button>
               <p className="text-sm text-center text-gray-600">
                 By signing up, you agree to our{" "}
