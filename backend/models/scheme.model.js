@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const schemeSchema = new mongoose.Schema(
   {
-    name: {
+    schemeName: {
       type: String,
       required: true,
     },
@@ -10,19 +10,19 @@ const schemeSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    State: {
+    state: {
       type: String,
       required: true,
     },
-    areaofresidence: {
+    areaOfResidence: {
       type: String,
       required: true,
     },
-    caste: {
+    casteCategory: {
       type: String,
       required: true,
     },
-    income: {
+    annualIncome: {
       type: String,
       required: true,
     },
@@ -34,11 +34,11 @@ const schemeSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    doclink: {
+    schemeDocuments: {
       type: String,
       required: true,
     },
-    sitelink: {
+    siteLink: {
       type: String,
       required: true,
     },

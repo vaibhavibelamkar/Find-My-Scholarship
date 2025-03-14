@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import StudentsTable from "../../components/dashboard/StudentsTable";
 import AnnouncementsList from "../../components/dashboard/AnnouncementsList";
+import axios from "axios";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -23,6 +24,7 @@ import {
   FileText,
   ArrowLeft,
 } from "lucide-react";
+import { toast } from "sonner";
 
 // Mock data for scholarships/schemes
 const initialSchemes = [
@@ -102,54 +104,65 @@ function Dashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedScheme, setSelectedScheme] = useState(null);
   const [formData, setFormData] = useState({
-    name: "",
-    provider: "Government",
-    amount: "",
-    deadline: "",
-    description: "",
-    eligibility: {
-      income: "",
-      academics: "",
-      category: "",
-    },
+    schemeName: "",
+    gender: "",
+    state: "",
+    areaOfResidence: "",
+    casteCategory: "",
+    annualIncome: "",
+    religion: "",
+    benefits: "",
+    schemeDocuments: "",
+    siteLink: "",
   });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
+    console.log(`Field: ${name}, Value: ${value}`);
     setFormData((prev) => {
-      if (name.startsWith("eligibility.")) {
-        const eligibilityField = name.split(".")[1];
-        return {
-          ...prev,
-          eligibility: {
-            ...prev.eligibility,
-            [eligibilityField]: value,
-          },
-        };
-      } else {
-        return {
-          ...prev,
-          [name]: value,
-        };
-      }
+      return {
+        ...prev,
+        [name]: value, // Update the specific field dynamically
+      };
     });
   };
 
-  const handleAddScheme = (newScheme) => {
-    setSchemes((prevSchemes) => [...prevSchemes, newScheme]);
+  const handleAddScheme = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/admin/addscheme",
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        // Add to state only if successfully added to the database
+        setSchemes((prevSchemes) => [...prevSchemes, response.data]);
+        toast.success("Scheme added successfully!");
+      } else {
+        toast.error("Failed to add scheme. Try again.");
+      }
+    } catch (error) {
+      console.error("Error adding scheme:", error);
+      toast.error("Something went wrong. Please try again.");
+    }
+
     setShowAddModal(false);
     setFormData({
-      name: "",
-      provider: "Government",
-      amount: "",
-      deadline: "",
-      description: "",
-      eligibility: {
-        income: "",
-        academics: "",
-        category: "",
-      },
+      schemeName: "",
+      gender: "",
+      state: "",
+      areaOfResidence: "",
+      casteCategory: "",
+      annualIncome: "",
+      religion: "",
+      benefits: "",
+      schemeDocuments: "",
+      siteLink: "",
     });
   };
 
@@ -444,7 +457,7 @@ function Dashboard() {
 
       {/* Add Scheme Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 text-[#002b4d] bg-opacity-75 flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Add New Scheme</h2>
