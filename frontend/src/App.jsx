@@ -4,7 +4,7 @@ import LandingPage from "./components/LandingPage";
 import UserDashboard from "./pages/user/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Login from "./components/Login.jsx";
+import Login from "./pages/Login.jsx";
 import Scheme from "./pages/user/Scheme";
 import ScholarshipForm from "./pages/user/ScholarshipForm";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -24,8 +24,8 @@ const appRouter = createBrowserRouter([
     element: (
       <>
         <Navbar />
-        {/* <ProtectedRoute element={<UserDashboard />} /> */}
-        <UserDashboard />
+        <ProtectedRoute element={<UserDashboard />} />
+        {/* <UserDashboard /> */}
       </>
     ),
   },
@@ -34,8 +34,8 @@ const appRouter = createBrowserRouter([
     element: (
       <>
         <Navbar />
-        {/* <ProtectedRoute element={<AdminDashboard />} /> */}
-        <AdminDashboard />
+        <ProtectedRoute element={<AdminDashboard />} />
+        {/* <AdminDashboard /> */}
       </>
     ),
   },
@@ -51,17 +51,17 @@ const appRouter = createBrowserRouter([
     path: "/user/scheme",
     element: (
       <>
-        {/* <ProtectedRoute element={<Scheme />} /> */}
-        <Scheme />
+        <ProtectedRoute element={<Scheme />} />
+        {/* <Scheme /> */}
       </>
     ),
   },
   {
-    path: "user/scholarshipForm",
+    path: "user/scholarships/check-eligibility",
     element: (
       <>
-        {/* <ProtectedRoute element={<ScholarshipForm />} />, */}
-        <ScholarshipForm />
+        <ProtectedRoute element={<ScholarshipForm />} />,
+        {/* <ScholarshipForm /> */}
       </>
     ),
   },

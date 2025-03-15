@@ -1,20 +1,64 @@
-import React, { useState } from 'react';
-import { GraduationCap, CheckCircle, Circle } from 'lucide-react';
+import React, { useState } from "react";
+import { GraduationCap, CheckCircle, Circle } from "lucide-react";
+import axios from "axios";
+import { toast } from "sonner";
 
-const STEPS = ['Contact Details', 'Personal Details', 'Education Details', 'Eligibility Check'];
-
-const STATES = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 
-  'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 
-  'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 
-  'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 
-  'West Bengal'
+const STEPS = [
+  "Contact Details",
+  "Personal Details",
+  "Education Details",
+  "Eligibility Check",
 ];
 
-const RELIGIONS = ['Hindu', 'Muslim', 'Christian', 'Sikh', 'Buddhist', 'Jain', 'Other'];
-const CASTES = ['General', 'OBC', 'SC', 'ST', 'Other'];
-const YEARS_OF_STUDY = ['First Year', 'Second Year', 'Third Year', 'Fourth Year', 'Fifth Year'];
-const SCHOLARSHIP_TYPES = ['Merit-based', 'Need-based', 'Special Category'];
+const STATES = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+];
+
+const RELIGIONS = [
+  "Hindu",
+  "Muslim",
+  "Christian",
+  "Sikh",
+  "Buddhist",
+  "Jain",
+  "Other",
+];
+const CASTES = ["General", "OBC", "SC", "ST", "Other"];
+const YEARS_OF_STUDY = [
+  "First Year",
+  "Second Year",
+  "Third Year",
+  "Fourth Year",
+  "Fifth Year",
+];
+const SCHOLARSHIP_TYPES = ["Merit-based", "Need-based", "Special Category"];
 
 function FormField({ label, hint, error, children }) {
   return (
@@ -48,8 +92,8 @@ function ProgressBar({ steps, currentStep }) {
               <div
                 className={`flex items-center justify-center w-8 h-8 rounded-full ${
                   index <= currentStep - 1
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-200 text-gray-600'
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-200 text-gray-600"
                 }`}
               >
                 {index < currentStep - 1 ? (
@@ -60,7 +104,7 @@ function ProgressBar({ steps, currentStep }) {
               </div>
               <span
                 className={`ml-2 text-sm ${
-                  index <= currentStep - 1 ? 'text-indigo-600' : 'text-gray-500'
+                  index <= currentStep - 1 ? "text-indigo-600" : "text-gray-500"
                 }`}
               >
                 {step}
@@ -69,7 +113,7 @@ function ProgressBar({ steps, currentStep }) {
             {index < steps.length - 1 && (
               <div
                 className={`h-1 w-12 ${
-                  index < currentStep - 1 ? 'bg-blue-600' : 'bg-gray-200'
+                  index < currentStep - 1 ? "bg-blue-600" : "bg-gray-200"
                 }`}
               />
             )}
@@ -84,78 +128,92 @@ export function ScholarshipForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Contact Details
-    fullName: '',
-    dateOfBirth: '',
-    parentName: '',
-    mobileNumber: '',
-    parentMobileNumber: '',
+    fullName: "",
+    dateOfBirth: "",
+    parentName: "",
+    mobileNumber: "",
+    parentMobileNumber: "",
 
     // Personal Details
-    annualIncome: '',
-    profession: '',
-    caste: '',
-    religion: '',
-    state: '',
+    annualIncome: "",
+    profession: "",
+    caste: "",
+    religion: "",
+    state: "",
     minorityStatus: false,
     bplStatus: false,
     singleParent: false,
     disabledStatus: false,
 
     // Education Details
-    tenthMarks: '',
-    twelfthMarks: '',
-    collegeName: '',
-    courseName: '',
-    yearOfStudy: '',
-    scholarshipCriteria: '',
-    areaOfResidence: ''
+    tenthMarks: "",
+    twelfthMarks: "",
+    collegeName: "",
+    courseName: "",
+    yearOfStudy: "",
+    scholarshipCriteria: "",
+    areaOfResidence: "",
   });
 
   const [errors, setErrors] = useState({});
 
   const validateStep = (step) => {
     const newErrors = {};
-    
+
     if (step === 1) {
-      if (!formData.fullName) newErrors.fullName = 'Full name is required';
-      if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
-      if (!formData.parentName) newErrors.parentName = 'Parent/Guardian name is required';
+      if (!formData.fullName) newErrors.fullName = "Full name is required";
+      if (!formData.dateOfBirth)
+        newErrors.dateOfBirth = "Date of birth is required";
+      if (!formData.parentName)
+        newErrors.parentName = "Parent/Guardian name is required";
       if (!formData.mobileNumber) {
-        newErrors.mobileNumber = 'Mobile number is required';
+        newErrors.mobileNumber = "Mobile number is required";
       } else if (!/^\d{10}$/.test(formData.mobileNumber)) {
-        newErrors.mobileNumber = 'Please enter a valid 10-digit number';
+        newErrors.mobileNumber = "Please enter a valid 10-digit number";
       }
       if (!formData.parentMobileNumber) {
-        newErrors.parentMobileNumber = 'Parent mobile number is required';
+        newErrors.parentMobileNumber = "Parent mobile number is required";
       } else if (!/^\d{10}$/.test(formData.parentMobileNumber)) {
-        newErrors.parentMobileNumber = 'Please enter a valid 10-digit number';
+        newErrors.parentMobileNumber = "Please enter a valid 10-digit number";
       }
     }
 
     if (step === 2) {
-      if (!formData.annualIncome) newErrors.annualIncome = 'Annual income is required';
-      if (!formData.profession) newErrors.profession = 'Profession is required';
-      if (!formData.caste) newErrors.caste = 'Caste is required';
-      if (!formData.religion) newErrors.religion = 'Religion is required';
-      if (!formData.state) newErrors.state = 'State is required';
+      if (!formData.annualIncome)
+        newErrors.annualIncome = "Annual income is required";
+      if (!formData.profession) newErrors.profession = "Profession is required";
+      if (!formData.caste) newErrors.caste = "Caste is required";
+      if (!formData.religion) newErrors.religion = "Religion is required";
+      if (!formData.state) newErrors.state = "State is required";
     }
 
     if (step === 3) {
       if (!formData.tenthMarks) {
-        newErrors.tenthMarks = '10th marks are required';
-      } else if (parseFloat(formData.tenthMarks) < 0 || parseFloat(formData.tenthMarks) > 100) {
-        newErrors.tenthMarks = 'Marks should be between 0 and 100';
+        newErrors.tenthMarks = "10th marks are required";
+      } else if (
+        parseFloat(formData.tenthMarks) < 0 ||
+        parseFloat(formData.tenthMarks) > 100
+      ) {
+        newErrors.tenthMarks = "Marks should be between 0 and 100";
       }
       if (!formData.twelfthMarks) {
-        newErrors.twelfthMarks = '12th marks are required';
-      } else if (parseFloat(formData.twelfthMarks) < 0 || parseFloat(formData.twelfthMarks) > 100) {
-        newErrors.twelfthMarks = 'Marks should be between 0 and 100';
+        newErrors.twelfthMarks = "12th marks are required";
+      } else if (
+        parseFloat(formData.twelfthMarks) < 0 ||
+        parseFloat(formData.twelfthMarks) > 100
+      ) {
+        newErrors.twelfthMarks = "Marks should be between 0 and 100";
       }
-      if (!formData.collegeName) newErrors.collegeName = 'College name is required';
-      if (!formData.courseName) newErrors.courseName = 'Course name is required';
-      if (!formData.yearOfStudy) newErrors.yearOfStudy = 'Year of study is required';
-      if (!formData.scholarshipCriteria) newErrors.scholarshipCriteria = 'Scholarship criteria is required';
-      if (!formData.areaOfResidence) newErrors.areaOfResidence = 'Area of residence is required';
+      if (!formData.collegeName)
+        newErrors.collegeName = "College name is required";
+      if (!formData.courseName)
+        newErrors.courseName = "Course name is required";
+      if (!formData.yearOfStudy)
+        newErrors.yearOfStudy = "Year of study is required";
+      if (!formData.scholarshipCriteria)
+        newErrors.scholarshipCriteria = "Scholarship criteria is required";
+      if (!formData.areaOfResidence)
+        newErrors.areaOfResidence = "Area of residence is required";
     }
 
     setErrors(newErrors);
@@ -164,26 +222,50 @@ export function ScholarshipForm() {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 4));
+      setCurrentStep((prev) => Math.min(prev + 1, 4));
     }
   };
 
   const handleBack = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
-
-  const handleSubmit = (e) => {
+  var decoded;
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    // alert(JSON.stringify(formData, null, 2));
+
     if (validateStep(3)) {
       setCurrentStep(4);
+    }
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/user/scholarships/check-eligibility",
+        // formData,decoded.userId
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        toast.success("Scheme checked successfully!");
+      } else {
+        toast.error("Failed to check schemes. Try again.");
+      }
+    } catch (error) {
+      console.error("Error in checking scheme:", error);
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
@@ -192,18 +274,19 @@ export function ScholarshipForm() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
           <GraduationCap className="mx-auto h-12 w-12 text-blue-600" />
-         
-         
         </div>
 
         <div className="bg-white shadow rounded-lg p-8">
           <ProgressBar steps={STEPS} currentStep={currentStep} />
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <FormStep title="Contact Details" currentStep={currentStep} stepNumber={1}>
+            <FormStep
+              title="Contact Details"
+              currentStep={currentStep}
+              stepNumber={1}
+            >
               <FormField
-                
-                hint ="Enter your full name as per official documents"
+                hint="Enter your full name as per official documents"
                 error={errors.fullName}
               >
                 <input
@@ -274,7 +357,11 @@ export function ScholarshipForm() {
               </FormField>
             </FormStep>
 
-            <FormStep title="Personal Details" currentStep={currentStep} stepNumber={2}>
+            <FormStep
+              title="Personal Details"
+              currentStep={currentStep}
+              stepNumber={2}
+            >
               <FormField
                 label="Annual Family Income"
                 hint="Enter your total family income per year"
@@ -315,8 +402,10 @@ export function ScholarshipForm() {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 >
                   <option value="">Select Caste</option>
-                  {CASTES.map(caste => (
-                    <option key={caste} value={caste}>{caste}</option>
+                  {CASTES.map((caste) => (
+                    <option key={caste} value={caste}>
+                      {caste}
+                    </option>
                   ))}
                 </select>
               </FormField>
@@ -333,8 +422,10 @@ export function ScholarshipForm() {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 >
                   <option value="">Select Religion</option>
-                  {RELIGIONS.map(religion => (
-                    <option key={religion} value={religion}>{religion}</option>
+                  {RELIGIONS.map((religion) => (
+                    <option key={religion} value={religion}>
+                      {religion}
+                    </option>
                   ))}
                 </select>
               </FormField>
@@ -351,8 +442,10 @@ export function ScholarshipForm() {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 >
                   <option value="">Select State</option>
-                  {STATES.map(state => (
-                    <option key={state} value={state}>{state}</option>
+                  {STATES.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
                   ))}
                 </select>
               </FormField>
@@ -412,7 +505,11 @@ export function ScholarshipForm() {
               </div>
             </FormStep>
 
-            <FormStep title="Education Details" currentStep={currentStep} stepNumber={3}>
+            <FormStep
+              title="Education Details"
+              currentStep={currentStep}
+              stepNumber={3}
+            >
               <FormField
                 label="10th Marks (%)"
                 hint="Enter your percentage or CGPA"
@@ -487,8 +584,10 @@ export function ScholarshipForm() {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 >
                   <option value="">Select Year</option>
-                  {YEARS_OF_STUDY.map(year => (
-                    <option key={year} value={year}>{year}</option>
+                  {YEARS_OF_STUDY.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
                   ))}
                 </select>
               </FormField>
@@ -505,8 +604,10 @@ export function ScholarshipForm() {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 >
                   <option value="">Select Criteria</option>
-                  {SCHOLARSHIP_TYPES.map(type => (
-                    <option key={type} value={type}>{type}</option>
+                  {SCHOLARSHIP_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
                   ))}
                 </select>
               </FormField>
@@ -529,7 +630,11 @@ export function ScholarshipForm() {
               </FormField>
             </FormStep>
 
-            <FormStep title="Eligibility Results" currentStep={currentStep} stepNumber={4}>
+            <FormStep
+              title="Eligibility Results"
+              currentStep={currentStep}
+              stepNumber={4}
+            >
               <div className="bg-green-50 border-l-4 border-green-400 p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
@@ -537,7 +642,8 @@ export function ScholarshipForm() {
                   </div>
                   <div className="ml-3">
                     <p className="text-sm text-green-700">
-                      Based on your profile, you are eligible for the following scholarships:
+                      Based on your profile, you are eligible for the following
+                      scholarships:
                     </p>
                   </div>
                 </div>
@@ -545,9 +651,12 @@ export function ScholarshipForm() {
 
               <div className="mt-6 space-y-4">
                 <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900">National Scholarship Portal</h3>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    National Scholarship Portal
+                  </h3>
                   <p className="mt-1 text-sm text-gray-600">
-                    Merit-cum-Means Scholarship for Professional and Technical Courses
+                    Merit-cum-Means Scholarship for Professional and Technical
+                    Courses
                   </p>
                   <a
                     href="#"
@@ -559,7 +668,9 @@ export function ScholarshipForm() {
                 </div>
 
                 <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900">State Merit Scholarship</h3>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    State Merit Scholarship
+                  </h3>
                   <p className="mt-1 text-sm text-gray-600">
                     For high-achieving students in higher education
                   </p>

@@ -25,6 +25,7 @@ app.use(
 
 // API
 app.use("/api/auth", userRoute);
+app.use("/api/user", userRoute);
 app.use("/api/admin", adminRoute);
 // app.use("/api/v1/course", courseRoute);
 // app.use("/api/v1/media", mediaRoute);

@@ -1,6 +1,8 @@
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/generateToken.js";
+import { jwtDecode } from "jwt-decode";
+import jwt from "jsonwebtoken";
 
 export const register = async (req, res) => {
   try {
@@ -65,6 +67,137 @@ export const login = async (req, res) => {
     return res.status(400).json({
       success: false,
       message: "Failed to login.",
+    });
+  }
+};
+
+export const checkEligibility = async (req, res) => {
+  try {
+    // ✅ Read token from cookies
+    const token = req.cookies?.token;
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Token is missing", success: false });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.SECRET_KEY); // Verify JWT
+    } catch (error) {
+      return res.status(401).json({ message: "Invalid token", success: false });
+    }
+
+    console.log("Decoded Token:", decoded); // 🔍 Debugging
+
+    const userId = decoded.userId;
+    const {
+      fullName,
+      dateOfBirth,
+      parentName,
+      mobileNumber,
+      parentMobileNumber,
+
+      // Personal Details
+      annualIncome,
+      profession,
+      caste,
+      religion,
+      state,
+      minorityStatus,
+      bplStatus,
+      singleParent,
+      disabledStatus,
+
+      // Education Details
+      tenthMarks,
+      twelfthMarks,
+      collegeName,
+      courseName,
+      yearOfStudy,
+      scholarshipCriteria,
+      areaOfResidence,
+    } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
+      });
+    }
+
+    if (
+      !fullName ||
+      !dateOfBirth ||
+      !parentName ||
+      !mobileNumber ||
+      !parentMobileNumber ||
+      // Personal Details
+      !annualIncome ||
+      !profession ||
+      !caste ||
+      !religion ||
+      !state ||
+      !minorityStatus ||
+      !bplStatus ||
+      !singleParent ||
+      !disabledStatus ||
+      // Education Details
+      !tenthMarks ||
+      !twelfthMarks ||
+      !collegeName ||
+      !courseName ||
+      !yearOfStudy ||
+      !scholarshipCriteria ||
+      !areaOfResidence
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required.",
+      });
+    }
+    const updatedData = {
+      fullName,
+      dateOfBirth,
+      parentName,
+      mobileNumber,
+      parentMobileNumber,
+
+      // Personal Details
+      annualIncome,
+      profession,
+      caste,
+      religion,
+      state,
+      minorityStatus,
+      bplStatus,
+      singleParent,
+      disabledStatus,
+
+      // Education Details
+      tenthMarks,
+      twelfthMarks,
+      collegeName,
+      courseName,
+      yearOfStudy,
+      scholarshipCriteria,
+      areaOfResidence,
+    };
+    const updatedUser = await User.findByIdAndUpdate(userId, updatedData, {
+      new: true,
+    }).select("-password");
+
+    return res.status(201).json({
+      success: true,
+      message: "Profile updated successfully.",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({
+      success: false,
+      message: "Error creating account",
     });
   }
 };
