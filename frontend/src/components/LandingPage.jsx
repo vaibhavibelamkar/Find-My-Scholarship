@@ -8,6 +8,7 @@ import {
   CheckCircle,
   BarChart2,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const slides = [
   {
@@ -72,9 +73,11 @@ const Slideshow = ({ scrollToAbout }) => {
                 {slide.description}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="bg-[#001a33] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-white hover:text-black transition-colors">
-                  Find Scholarships
-                </button>
+              <Link to="/user/scheme">
+        <button className="bg-[#001a33] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-white hover:text-black transition-colors">
+          Find Scholarships
+        </button>
+        </Link>
                 <button
                   onClick={scrollToAbout}
                   className="bg-[#001a33] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 hover:text-black transition-colors"
@@ -149,15 +152,30 @@ const HowItWorks = () => {
           {steps.map((step, index) => (
             <div
               key={index}
-              className="flex flex-col items-center p-6 bg-emerald-50 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+              className="relative flex flex-col items-center p-6 bg-emerald-50 rounded-xl shadow-lg transition-all duration-500 transform 
+              hover:scale-105 hover:-translate-y-2 hover:shadow-2xl hover:rotate-1 
+              hover:bg-opacity-90 hover:backdrop-blur-lg hover:border hover:border-white hover:border-opacity-40"
             >
-              <div className="w-16 h-16 flex items-center justify-center bg-[#001a33] rounded-full mb-4">
+              {/* Glowing Effect on Hover */}
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#001a33]/20 to-transparent opacity-0 transition-opacity duration-500 hover:opacity-100"></div>
+
+              {/* Animated Icon */}
+              <div className="w-16 h-16 flex items-center justify-center bg-[#001a33] rounded-full mb-4 transition-all duration-300 transform 
+              hover:scale-125 hover:rotate-6 hover:shadow-lg">
                 <step.icon className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+
+              {/* Text Slide-Up Effect */}
+              <h3 className="text-xl font-semibold text-gray-900 mb-2 transition-all duration-500 transform hover:-translate-y-1 hover:scale-110 hover:text-[#001a33]">
                 {step.title}
               </h3>
-              <p className="text-gray-600 text-center">{step.description}</p>
+
+              {/* Description with Blur Effect */}
+              <p className="text-gray-600 text-center transition-all duration-500 hover:text-gray-800 hover:blur-sm hover:tracking-wide">
+                {step.description}
+              </p>
+
+              {/* Step Connectors for Desktop View */}
               {index < steps.length - 1 && (
                 <div className="hidden md:block absolute right-0 top-1/2 w-8 h-0.5 bg-gray-300 transform translate-x-full">
                   <div className="absolute right-0 -mt-1 w-2 h-2 rounded-full bg-gray-300"></div>
@@ -170,6 +188,14 @@ const HowItWorks = () => {
     </section>
   );
 };
+
+
+
+
+
+
+
+
 
 function AboutUs() {
   return (

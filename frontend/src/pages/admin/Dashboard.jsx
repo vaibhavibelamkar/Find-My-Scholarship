@@ -122,7 +122,7 @@ function Dashboard() {
     setFormData((prev) => {
       return {
         ...prev,
-        [name]: value, // Update the specific field dynamically
+        [name]: value,
       };
     });
   };
@@ -140,7 +140,6 @@ function Dashboard() {
       );
 
       if (response.status === 201) {
-        // Add to state only if successfully added to the database
         setSchemes((prevSchemes) => [...prevSchemes, response.data]);
         toast.success("Scheme added successfully!");
       } else {
@@ -458,7 +457,7 @@ function Dashboard() {
       {/* Add Scheme Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Add New Scheme</h2>
               <button
@@ -468,7 +467,9 @@ function Dashboard() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <SchemeForm onSubmit={handleAddScheme} buttonText="Add Scheme" />
+            <div className="overflow-y-auto flex-1 pr-2">
+              <SchemeForm onSubmit={handleAddScheme} buttonText="Add Scheme" />
+            </div>
           </div>
         </div>
       )}
@@ -476,7 +477,7 @@ function Dashboard() {
       {/* Edit Scheme Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Edit Scheme</h2>
               <button
@@ -486,10 +487,12 @@ function Dashboard() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <SchemeForm
-              onSubmit={handleEditScheme}
-              buttonText="Update Scheme"
-            />
+            <div className="overflow-y-auto flex-1 pr-2">
+              <SchemeForm
+                onSubmit={handleEditScheme}
+                buttonText="Update Scheme"
+              />
+            </div>
           </div>
         </div>
       )}

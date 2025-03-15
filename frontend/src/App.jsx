@@ -34,8 +34,8 @@ const appRouter = createBrowserRouter([
     element: (
       <>
         <Navbar />
-        <ProtectedRoute element={<AdminDashboard />} />
-        {/* <AdminDashboard /> */}
+        {/*<ProtectedRoute element={<AdminDashboard />} />*/}
+         <AdminDashboard /> 
       </>
     ),
   },
