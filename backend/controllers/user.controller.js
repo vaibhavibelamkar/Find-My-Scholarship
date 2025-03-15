@@ -73,23 +73,14 @@ export const login = async (req, res) => {
 
 export const checkEligibility = async (req, res) => {
   try {
-    // ✅ Read token from cookies
-    const token = req.cookies?.token;
-
-    if (!token) {
-      return res
-        .status(401)
-        .json({ message: "Token is missing", success: false });
-    }
-
+    // const id = req.body.token;
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.SECRET_KEY); // Verify JWT
+      decoded = jwt.verify(req.body.token, process.env.SECRET_KEY);
     } catch (error) {
       return res.status(401).json({ message: "Invalid token", success: false });
     }
-
-    console.log("Decoded Token:", decoded); // 🔍 Debugging
+    console.log("Decoded Token:", decoded);
 
     const userId = decoded.userId;
     const {
@@ -140,10 +131,6 @@ export const checkEligibility = async (req, res) => {
       !caste ||
       !religion ||
       !state ||
-      !minorityStatus ||
-      !bplStatus ||
-      !singleParent ||
-      !disabledStatus ||
       // Education Details
       !tenthMarks ||
       !twelfthMarks ||

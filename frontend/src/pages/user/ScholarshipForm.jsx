@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { GraduationCap, CheckCircle, Circle } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
+import { jwtDecode } from "jwt-decode";
 
 const STEPS = [
   "Contact Details",
@@ -125,6 +126,15 @@ function ProgressBar({ steps, currentStep }) {
 }
 
 export function ScholarshipForm() {
+  const getCookie = (name) => {
+    const cookies = document.cookie.split("; ");
+    console.log(cookies);
+    for (let cookie of cookies) {
+      const [key, value] = cookie.split("=");
+      if (key === name) return value;
+    }
+    return null;
+  };
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Contact Details
@@ -245,12 +255,11 @@ export function ScholarshipForm() {
     if (validateStep(3)) {
       setCurrentStep(4);
     }
-
+    const token = getCookie("token");
     try {
       const response = await axios.post(
         "http://localhost:8080/api/user/scholarships/check-eligibility",
-        // formData,decoded.userId
-        formData,
+        { ...formData, token },
         {
           headers: {
             "Content-Type": "application/json",
