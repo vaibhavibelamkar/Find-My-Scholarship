@@ -188,3 +188,27 @@ export const checkEligibility = async (req, res) => {
     });
   }
 };
+
+export const getProfile = async (req,res)=>{
+  let decoded;
+    try {
+      decoded = jwt.verify(req.body.token, process.env.SECRET_KEY);
+    } catch (error) {
+      return res.status(401).json({ message: "Invalid token", success: false });
+    }
+    console.log("Decoded Token:", decoded);
+
+    const userId = decoded.userId;
+    const user = await User.findOne({ userId });
+    if (!user) {
+      return res.status(201).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "User profile retrieved successfully.",
+      user,
+    });
+}
