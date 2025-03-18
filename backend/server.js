@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import userRoute from "./routes/user.route.js";
 import adminRoute from "./routes/admin.route.js";
 import schemeRoute from "./routes/scheme.route.js";
+import authRoute from "./routes/auth.route.js";
 import cors from "cors";
 
 dotenv.config({});
@@ -25,7 +26,7 @@ app.use(
 );
 
 // API
-app.use("/api/auth", userRoute);
+app.use("/api/auth", authRoute);
 app.use("/api/user", userRoute);
 app.use("/api/admin", adminRoute);
 app.use("/api/scholarships", schemeRoute);

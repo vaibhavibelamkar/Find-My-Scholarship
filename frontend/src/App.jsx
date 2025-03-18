@@ -8,6 +8,7 @@ import Login from "./pages/Login.jsx";
 import Scheme from "./pages/user/Scheme";
 import ScholarshipForm from "./pages/user/ScholarshipForm";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 
 const appRouter = createBrowserRouter([
   {
@@ -35,7 +36,7 @@ const appRouter = createBrowserRouter([
       <>
         <Navbar />
         {/*<ProtectedRoute element={<AdminDashboard />} />*/}
-         <AdminDashboard /> 
+        <AdminDashboard />
       </>
     ),
   },
@@ -62,6 +63,14 @@ const appRouter = createBrowserRouter([
       <>
         <ProtectedRoute element={<ScholarshipForm />} />,
         {/* <ScholarshipForm /> */}
+      </>
+    ),
+  },
+  {
+    path: "/reset-password/:id/:token",
+    element: (
+      <>
+        <ResetPassword />
       </>
     ),
   },

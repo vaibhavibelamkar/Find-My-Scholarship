@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { Mail, Lock, User, LogIn, UserPlus } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
@@ -78,8 +77,7 @@ const Login = () => {
 
       setIsLoading(true);
 
-      const API_BASE_URL =
-        import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+      const API_BASE_URL = "http://localhost:8080/api";
       const endpoint = type === "login" ? "/auth/login" : "/auth/signup";
       const payload = type === "login" ? loginInput : signupInput;
 
@@ -129,8 +127,7 @@ const Login = () => {
 
     try {
       setIsLoading(true);
-      const API_BASE_URL =
-        import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+      const API_BASE_URL = "http://localhost:8080/api";
       const response = await axios.post(
         `${API_BASE_URL}/auth/reset-password`,
         {
