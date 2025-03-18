@@ -40,6 +40,7 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
+    console.log(req.body);
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({
@@ -49,7 +50,7 @@ export const login = async (req, res) => {
     }
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(201).json({
+      return res.status(400).json({
         success: false,
         message: "Incorrect password or email.",
       });
@@ -78,7 +79,7 @@ export const checkEligibility = async (req, res) => {
     try {
       decoded = jwt.verify(req.body.token, process.env.SECRET_KEY);
     } catch (error) {
-      return res.status(401).json({ message: "Invalid token", success: false });
+      return res.status(400).json({ message: "Invalid token", success: false });
     }
     console.log("Decoded Token:", decoded);
 
@@ -113,7 +114,7 @@ export const checkEligibility = async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({
+      return res.status(400).json({
         message: "User not found",
         success: false,
       });
@@ -189,26 +190,24 @@ export const checkEligibility = async (req, res) => {
   }
 };
 
-export const getProfile = async (req,res)=>{
+export const getProfile = async (req, res) => {
   let decoded;
-    try {
-      decoded = jwt.verify(req.body.token, process.env.SECRET_KEY);
-    } catch (error) {
-      return res.status(401).json({ message: "Invalid token", success: false });
-    }
-    console.log("Decoded Token:", decoded);
-
-    const userId = decoded.userId;
-    const user = await User.findOne({ userId });
-    if (!user) {
-      return res.status(201).json({
-        success: false,
-        message: "User not found.",
-      });
-    }
-    return res.status(200).json({
-      success: true,
-      message: "User profile retrieved successfully.",
-      user,
+  try {
+    decoded = jwt.verify(req.body.token, process.env.SECRET_KEY);
+  } catch (error) {
+    return res.status(400).json({ message: "Invalid token", success: false });
+  }
+  const userId = decoded.userId;
+  const user = await User.findOne({ _id: userId });
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "User not found.",
     });
-}
+  }
+  return res.status(201).json({
+    success: true,
+    message: "User profile retrieved successfully.",
+    user,
+  });
+};

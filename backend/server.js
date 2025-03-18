@@ -4,6 +4,7 @@ import connectDB from "./database/db.js";
 import dotenv from "dotenv";
 import userRoute from "./routes/user.route.js";
 import adminRoute from "./routes/admin.route.js";
+import schemeRoute from "./routes/scheme.route.js";
 import cors from "cors";
 
 dotenv.config({});
@@ -27,6 +28,7 @@ app.use(
 app.use("/api/auth", userRoute);
 app.use("/api/user", userRoute);
 app.use("/api/admin", adminRoute);
+app.use("/api/scholarships", schemeRoute);
 // app.use("/api/v1/course", courseRoute);
 // app.use("/api/v1/media", mediaRoute);
 // app.use("/api/v1/purchase", purchaseRoute);

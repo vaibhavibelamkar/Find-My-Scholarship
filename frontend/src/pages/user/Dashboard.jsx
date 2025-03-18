@@ -9,35 +9,35 @@ import {
   StarOff,
   Phone,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
 
 // Sample User Data
-const userData = {
-  name: "John Doe",
-  phone: "+1 234 567 8900",
-  avatar:
-    "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60",
-};
+// const userData = {
+//   name: "John Doe",
+//   phone: "+1 234 567 8900",
+//   avatar:
+//     "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60",
+// };
 
 // Sample Scholarships Data
-const scholarships = [
-  {
-    id: 1,
-    title: "Merit Excellence Scholarship",
-    amount: "$5000",
-    deadline: "2024-05-15",
-    type: "merit-based",
-  },
-  {
-    id: 2,
-    title: "Need-Based Support Grant",
-    amount: "$3000",
-    deadline: "2024-06-01",
-    type: "need-based",
-  },
-];
+// const scholarships = [
+//   {
+//     id: 1,
+//     title: "Merit Excellence Scholarship",
+//     amount: "$5000",
+//     deadline: "2024-05-15",
+//     type: "merit-based",
+//   },
+//   {
+//     id: 2,
+//     title: "Need-Based Support Grant",
+//     amount: "$3000",
+//     deadline: "2024-06-01",
+//     type: "need-based",
+//   },
+// ];
 
 const news = [
   { id: 1, title: "New Government Scholarship Announced", date: "2024-03-01" },
@@ -49,48 +49,65 @@ const news = [
 ];
 
 function Dashboard() {
-  
-useEffect(() => {
-  
-const getCookie = (name) => {
-  const cookies = document.cookie.split("; ");
-  console.log(cookies);
-  for (let cookie of cookies) {
-    const [key, value] = cookie.split("=");
-    if (key === name) return value;
-  }
-  return null;
-};
-  const token = getCookie("token"); 
-  if(!token){
-    toast.error("token not found");
-  }
-  try {
-    const API_BASE_URL = "http://localhost:8080/api/user/getProfile";
-    const response = axios.post(`${API_BASE_URL}`,token, {
-      withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    console.log("Response:"+response);
-    // if (response.data?.success) {
-    //   if (type === "signup") {
-    //     toast.success("Account created successfully!");
-    //     setActiveTab("login");
-    //   } else {
-    //     toast.success(response.data.message || "Login successful!");
-    //     navigate("/user/dashboard");
-    //   }
-    // } else {
-    //   toast.error(
-    //     response.data.message || "Invalid credentials. Please try again."
-    //   );
-    // }
-  } catch (error) {
-    toast.error(error);
-  }
-});
+  const [userData, setUserData] = useState(null);
+  const [scholarships, setScholarships] = useState([]);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const getCookie = (name) => {
+      const cookies = document.cookie.split("; ");
+      for (let cookie of cookies) {
+        const [key, value] = cookie.split("=");
+        if (key === name) return value;
+      }
+      return null;
+    };
+    const fetchProfile = async () => {
+      const token = getCookie("token");
+      if (!token) {
+        toast.error("token not found");
+      }
+      try {
+        const API_BASE_URL = "http://localhost:8080/api/user/profile";
+        const response = await axios.post(
+          `${API_BASE_URL}`,
+          { token },
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.data?.success) {
+          setUserData(response.data.user);
+        }
+      } catch (error) {
+        toast.error(error);
+      }
+    };
+
+    fetchProfile();
+
+    const fetchScholarships = async () => {
+      try {
+        const API_BASE_URL = "http://localhost:8080/api/scholarships/all";
+        const response = await axios.post(`${API_BASE_URL}`, {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.data?.success) {
+          setScholarships(response.data.data);
+        }
+      } catch (error) {
+        toast.error(error);
+      }
+    };
+
+    fetchScholarships();
+  }, [navigate]);
+  // });
   const [activeFilter, setActiveFilter] = useState("all");
   const [favorites, setFavorites] = useState([2]);
   const [showHelpForm, setShowHelpForm] = useState(false);
@@ -116,8 +133,8 @@ const getCookie = (name) => {
   };
 
   // Get favorite scholarships
-  const favoriteScholarships = scholarships.filter((scholarship) =>
-    favorites.includes(scholarship.id)
+  const favoriteScholarships = (scholarships ?? []).filter((scholarship) =>
+    favorites.includes(scholarship._id)
   );
 
   return (
@@ -136,7 +153,7 @@ const getCookie = (name) => {
               <Filter className="w-5 h-5" /> Filters
             </button>
             <div className="pl-7 space-y-2 text-sm">
-              {["all", "merit", "need"].map((type) => (
+              {["all", "state", "caste", "deadline"].map((type) => (
                 <button
                   key={type}
                   className={`w-full text-left p-1 rounded ${
@@ -145,10 +162,12 @@ const getCookie = (name) => {
                   onClick={() => setActiveFilter(type)}
                 >
                   {type === "all"
-                    ? "Governmental"
-                    : type === "merit"
-                    ? "Non Governmental"
-                    : "Others"}
+                    ? "All"
+                    : type === "state"
+                    ? "State"
+                    : type === "caste"
+                    ? "Caste"
+                    : "Deadline"}
                 </button>
               ))}
             </div>
@@ -187,18 +206,20 @@ const getCookie = (name) => {
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-100 shadow-md flex-shrink-0">
                 <img
-                  src={userData.avatar}
+                  src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60"
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-700 truncate">
-                  {userData.name}
+                  {userData ? userData.fullName : "Katrina Kaif"}
                 </p>
                 <div className="flex items-center gap-1 text-xs text-gray-500">
                   <Phone className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate">{userData.phone}</span>
+                  <span className="truncate">
+                    {userData ? userData.mobileNumber : "000000000000"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -286,19 +307,22 @@ const getCookie = (name) => {
                     {(showFavorites ? favoriteScholarships : scholarships).map(
                       (scholarship) => (
                         <div
-                          key={scholarship.id}
+                          key={scholarship._id}
                           className="bg-white p-4 rounded-lg shadow-sm border border-gray-400 hover:shadow-md transition-shadow"
                         >
                           <div className="flex justify-between items-start">
                             <div>
                               <h3 className="text-lg font-semibold">
-                                {scholarship.title}
+                                {scholarship.schemeName}
                               </h3>
                               <p className="text-gray-600 mt-1">
-                                Amount: {scholarship.amount}
+                                Amount: {scholarship.benefits}
                               </p>
                               <p className="text-gray-600">
                                 Deadline: {scholarship.deadline}
+                              </p>
+                              <p className="text-gray-600">
+                                State: {scholarship.state}
                               </p>
                               <span className="inline-block mt-2 px-3 py-1 bg-indigo-50 text-[#001a33] rounded-full text-sm">
                                 {scholarship.type}

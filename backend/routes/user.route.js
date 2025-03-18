@@ -11,7 +11,7 @@ import isAuthenticated from "../middlewares/isAutheticated.js";
 router.route("/signup").post(register);
 router.route("/login").post(login);
 router.route("/scholarships/check-eligibility").post(checkEligibility);
-router.route("/getProfile").post(getProfile)
+router.route("/profile").post(getProfile);
 // router.route("/logout").get(logout);
 // router.route("/dashboard").post(isAuthenticated, openDashboard);
 // router
