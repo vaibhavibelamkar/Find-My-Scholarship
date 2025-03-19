@@ -93,7 +93,7 @@ function ProgressBar({ steps, currentStep }) {
               <div
                 className={`flex items-center justify-center w-8 h-8 rounded-full ${
                   index <= currentStep - 1
-                    ? "bg-indigo-600 text-white"
+                    ? "bg-[#001a33] text-white"
                     : "bg-gray-200 text-gray-600"
                 }`}
               >
@@ -105,7 +105,7 @@ function ProgressBar({ steps, currentStep }) {
               </div>
               <span
                 className={`ml-2 text-sm ${
-                  index <= currentStep - 1 ? "text-indigo-600" : "text-gray-500"
+                  index <= currentStep - 1 ? "text-[#001a33]" : "text-gray-500"
                 }`}
               >
                 {step}
@@ -114,7 +114,7 @@ function ProgressBar({ steps, currentStep }) {
             {index < steps.length - 1 && (
               <div
                 className={`h-1 w-12 ${
-                  index < currentStep - 1 ? "bg-blue-600" : "bg-gray-200"
+                  index < currentStep - 1 ? "bg-[#001a33]" : "bg-gray-200"
                 }`}
               />
             )}
@@ -250,7 +250,6 @@ export function ScholarshipForm() {
   var decoded;
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // alert(JSON.stringify(formData, null, 2));
 
     if (validateStep(3)) {
       setCurrentStep(4);
@@ -282,7 +281,7 @@ export function ScholarshipForm() {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <GraduationCap className="mx-auto h-12 w-12 text-blue-600" />
+          <GraduationCap className="mx-auto h-12 w-12 text-[#001a33]" />
         </div>
 
         <div className="bg-white shadow rounded-lg p-8">
@@ -303,7 +302,7 @@ export function ScholarshipForm() {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 />
               </FormField>
 
@@ -317,7 +316,7 @@ export function ScholarshipForm() {
                   name="dateOfBirth"
                   value={formData.dateOfBirth}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 />
               </FormField>
 
@@ -331,7 +330,7 @@ export function ScholarshipForm() {
                   name="parentName"
                   value={formData.parentName}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 />
               </FormField>
 
@@ -345,7 +344,7 @@ export function ScholarshipForm() {
                   name="mobileNumber"
                   value={formData.mobileNumber}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                   maxLength="10"
                 />
               </FormField>
@@ -360,7 +359,7 @@ export function ScholarshipForm() {
                   name="parentMobileNumber"
                   value={formData.parentMobileNumber}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                   maxLength="10"
                 />
               </FormField>
@@ -381,7 +380,7 @@ export function ScholarshipForm() {
                   name="annualIncome"
                   value={formData.annualIncome}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 />
               </FormField>
 
@@ -395,7 +394,7 @@ export function ScholarshipForm() {
                   name="profession"
                   value={formData.profession}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 />
               </FormField>
 
@@ -408,7 +407,7 @@ export function ScholarshipForm() {
                   name="caste"
                   value={formData.caste}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 >
                   <option value="">Select Caste</option>
                   {CASTES.map((caste) => (
@@ -428,7 +427,7 @@ export function ScholarshipForm() {
                   name="religion"
                   value={formData.religion}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 >
                   <option value="">Select Religion</option>
                   {RELIGIONS.map((religion) => (
@@ -448,7 +447,7 @@ export function ScholarshipForm() {
                   name="state"
                   value={formData.state}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 >
                   <option value="">Select State</option>
                   {STATES.map((state) => (
@@ -466,7 +465,7 @@ export function ScholarshipForm() {
                     name="minorityStatus"
                     checked={formData.minorityStatus}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-[#001a33] focus:ring-[#001a33] border-gray-300 rounded"
                   />
                   <label className="ml-2 block text-sm text-gray-900">
                     Belong to Minority Community
@@ -479,7 +478,7 @@ export function ScholarshipForm() {
                     name="bplStatus"
                     checked={formData.bplStatus}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-[#001a33] focus:ring-[#001a33] border-gray-300 rounded"
                   />
                   <label className="ml-2 block text-sm text-gray-900">
                     Below Poverty Line (BPL)
@@ -492,7 +491,7 @@ export function ScholarshipForm() {
                     name="singleParent"
                     checked={formData.singleParent}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-[#001a33] focus:ring-[#001a33] border-gray-300 rounded"
                   />
                   <label className="ml-2 block text-sm text-gray-900">
                     Single Parent
@@ -505,7 +504,7 @@ export function ScholarshipForm() {
                     name="disabledStatus"
                     checked={formData.disabledStatus}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-[#001a33] focus:ring-[#001a33] border-gray-300 rounded"
                   />
                   <label className="ml-2 block text-sm text-gray-900">
                     Person with Disability
@@ -532,7 +531,7 @@ export function ScholarshipForm() {
                   min="0"
                   max="100"
                   step="0.01"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 />
               </FormField>
 
@@ -549,7 +548,7 @@ export function ScholarshipForm() {
                   min="0"
                   max="100"
                   step="0.01"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 />
               </FormField>
 
@@ -563,7 +562,7 @@ export function ScholarshipForm() {
                   name="collegeName"
                   value={formData.collegeName}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 />
               </FormField>
 
@@ -577,7 +576,7 @@ export function ScholarshipForm() {
                   name="courseName"
                   value={formData.courseName}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 />
               </FormField>
 
@@ -590,7 +589,7 @@ export function ScholarshipForm() {
                   name="yearOfStudy"
                   value={formData.yearOfStudy}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 >
                   <option value="">Select Year</option>
                   {YEARS_OF_STUDY.map((year) => (
@@ -610,7 +609,7 @@ export function ScholarshipForm() {
                   name="scholarshipCriteria"
                   value={formData.scholarshipCriteria}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 >
                   <option value="">Select Criteria</option>
                   {SCHOLARSHIP_TYPES.map((type) => (
@@ -630,7 +629,7 @@ export function ScholarshipForm() {
                   name="areaOfResidence"
                   value={formData.areaOfResidence}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
                 >
                   <option value="">Select Area</option>
                   <option value="Urban">Urban</option>
@@ -669,7 +668,7 @@ export function ScholarshipForm() {
                   </p>
                   <a
                     href="#"
-                    className="mt-3 inline-flex items-center text-sm text-blue-600 hover:text-blue-500"
+                    className="mt-3 inline-flex items-center text-sm text-[#001a33] hover:text-opacity-80"
                   >
                     Learn more
                     <span className="ml-2">→</span>
@@ -685,7 +684,7 @@ export function ScholarshipForm() {
                   </p>
                   <a
                     href="#"
-                    className="mt-3 inline-flex items-center text-sm text-blue-600 hover:text-blue-500"
+                    className="mt-3 inline-flex items-center text-sm text-[#001a33] hover:text-opacity-80"
                   >
                     Learn more
                     <span className="ml-2">→</span>
@@ -699,7 +698,7 @@ export function ScholarshipForm() {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#001a33]"
                 >
                   Back
                 </button>
@@ -708,7 +707,7 @@ export function ScholarshipForm() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="ml-auto bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="ml-auto bg-[#001a33] py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#001a33]"
                 >
                   Next
                 </button>
@@ -716,7 +715,7 @@ export function ScholarshipForm() {
               {currentStep === 3 && (
                 <button
                   type="submit"
-                  className="ml-3 bg-green-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  className="ml-3 bg-[#001a33] py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#001a33]"
                 >
                   Check Eligibility
                 </button>

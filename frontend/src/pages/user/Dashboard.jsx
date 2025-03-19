@@ -8,36 +8,11 @@ import {
   Star,
   StarOff,
   Phone,
+  ChevronRight,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-
-// Sample User Data
-// const userData = {
-//   name: "John Doe",
-//   phone: "+1 234 567 8900",
-//   avatar:
-//     "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60",
-// };
-
-// Sample Scholarships Data
-// const scholarships = [
-//   {
-//     id: 1,
-//     title: "Merit Excellence Scholarship",
-//     amount: "$5000",
-//     deadline: "2024-05-15",
-//     type: "merit-based",
-//   },
-//   {
-//     id: 2,
-//     title: "Need-Based Support Grant",
-//     amount: "$3000",
-//     deadline: "2024-06-01",
-//     type: "need-based",
-//   },
-// ];
 
 const news = [
   { id: 1, title: "New Government Scholarship Announced", date: "2024-03-01" },
@@ -48,10 +23,46 @@ const news = [
   },
 ];
 
+// List of Indian states
+const indianStates = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+];
+
 function Dashboard() {
   const [userData, setUserData] = useState(null);
   const [scholarships, setScholarships] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const [selectedState, setSelectedState] = useState("");
+
   useEffect(() => {
     const getCookie = (name) => {
       const cookies = document.cookie.split("; ");
@@ -61,6 +72,7 @@ function Dashboard() {
       }
       return null;
     };
+
     const fetchProfile = async () => {
       const token = getCookie("token");
       if (!token) {
@@ -107,13 +119,57 @@ function Dashboard() {
 
     fetchScholarships();
   }, [navigate]);
-  // });
+
   const [activeFilter, setActiveFilter] = useState("all");
   const [favorites, setFavorites] = useState([2]);
   const [showHelpForm, setShowHelpForm] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
   const [question, setQuestion] = useState("");
   const [showThankYou, setShowThankYou] = useState(false);
+
+  // Filter scholarships based on search query and active filter
+  const filteredScholarships = React.useMemo(() => {
+    let filtered = [...scholarships];
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (scholarship) =>
+          scholarship.schemeName.toLowerCase().includes(query) ||
+          scholarship.state.toLowerCase().includes(query) ||
+          scholarship.benefits.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply state filter
+    if (selectedState) {
+      filtered = filtered.filter(
+        (scholarship) => scholarship.state === selectedState
+      );
+    }
+
+    // Apply category filter
+    if (activeFilter !== "all" && activeFilter !== "state") {
+      filtered = filtered.filter((scholarship) => {
+        switch (activeFilter) {
+          case "caste":
+            return scholarship.caste;
+          case "deadline":
+            return true;
+          default:
+            return true;
+        }
+      });
+
+      // Sort by deadline if that filter is active
+      if (activeFilter === "deadline") {
+        filtered.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      }
+    }
+
+    return filtered;
+  }, [scholarships, searchQuery, activeFilter, selectedState]);
 
   // Toggle Favorite Function
   const toggleFavorite = (id) => {
@@ -137,10 +193,41 @@ function Dashboard() {
     favorites.includes(scholarship._id)
   );
 
+  // Get scholarships to display based on showFavorites
+  const displayedScholarships = showFavorites
+    ? favoriteScholarships
+    : filteredScholarships;
+
+  const handleStateSelect = (state) => {
+    setSelectedState(state);
+    setActiveFilter("state");
+    setShowStateDropdown(false);
+  };
+
   return (
     <div className="h-screen flex bg-gray-50">
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-lg flex flex-col">
+        {/* Profile Section - Moved up */}
+        <div className="mt-5 mr-10 p-4 bg-white rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-100 shadow-md flex-shrink-0">
+              <img
+                src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60"
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-700 truncate">
+                {userData ? userData.username : ""}
+              </p>
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <span className="truncate">{userData ? userData.email : ""}</span>
+              </div>
+            </div>
+          </div>
+        </div>
         <div className="flex-1 p-4">
           <nav className="space-y-2">
             <button
@@ -153,21 +240,64 @@ function Dashboard() {
               <Filter className="w-5 h-5" /> Filters
             </button>
             <div className="pl-7 space-y-2 text-sm">
-              {["all", "state", "caste", "deadline"].map((type) => (
+              <button
+                className={`w-full text-left p-1 rounded ${
+                  activeFilter === "all" ? "text-[#001a33]" : "text-gray-400"
+                }`}
+                onClick={() => {
+                  setActiveFilter("all");
+                  setSelectedState("");
+                }}
+              >
+                All
+              </button>
+              <div
+                className="relative"
+                onMouseEnter={() => setShowStateDropdown(true)}
+                onMouseLeave={() => setShowStateDropdown(false)}
+              >
+                <button
+                  className={`w-full text-left p-1 rounded flex items-center justify-between ${
+                    activeFilter === "state" ? "text-[#001a33]" : "text-gray-400"
+                  }`}
+                >
+                  <span>
+                    {selectedState ? `State: ${selectedState}` : "State"}
+                  </span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                {showStateDropdown && (
+                  <div className="absolute left-full top-0 ml-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="max-h-64 overflow-y-auto">
+                      {indianStates.map((state) => (
+                        <button
+                          key={state}
+                          className={`w-full text-left px-4 py-2 hover:bg-gray-50 ${
+                            selectedState === state
+                              ? "text-[#001a33] font-medium"
+                              : "text-gray-600"
+                          }`}
+                          onClick={() => handleStateSelect(state)}
+                        >
+                          {state}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {["caste", "deadline"].map((type) => (
                 <button
                   key={type}
                   className={`w-full text-left p-1 rounded ${
                     activeFilter === type ? "text-[#001a33]" : "text-gray-400"
                   }`}
-                  onClick={() => setActiveFilter(type)}
+                  onClick={() => {
+                    setActiveFilter(type);
+                    setSelectedState("");
+                  }}
                 >
-                  {type === "all"
-                    ? "All"
-                    : type === "state"
-                    ? "State"
-                    : type === "caste"
-                    ? "Caste"
-                    : "Deadline"}
+                  {type === "caste" ? "Caste" : "Deadline"}
                 </button>
               ))}
             </div>
@@ -200,30 +330,6 @@ function Dashboard() {
               </button>
             </Link>
           </nav>
-
-          {/* Profile Section - Moved up */}
-          <div className="mt-65 mr-10 p-4 bg-white rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-100 shadow-md flex-shrink-0">
-                <img
-                  src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60"
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-700 truncate">
-                  {userData ? userData.fullName : "Katrina Kaif"}
-                </p>
-                <div className="flex items-center gap-1 text-xs text-gray-500">
-                  <Phone className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate">
-                    {userData ? userData.mobileNumber : "000000000000"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </aside>
 
@@ -286,6 +392,8 @@ function Dashboard() {
                   <input
                     type="text"
                     placeholder="Search scholarships..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-400 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
                   />
                   <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
@@ -301,67 +409,75 @@ function Dashboard() {
                   <h2 className="text-xl font-semibold mb-3">
                     {showFavorites
                       ? "Favorite Scholarships"
+                      : selectedState
+                      ? `Scholarships in ${selectedState}`
                       : "Available Scholarships"}
                   </h2>
                   <div className="grid gap-3">
-                    {(showFavorites ? favoriteScholarships : scholarships).map(
-                      (scholarship) => (
-                        <div
-                          key={scholarship._id}
-                          className="bg-white p-4 rounded-lg shadow-sm border border-gray-400 hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="text-lg font-semibold">
-                                {scholarship.schemeName}
-                              </h3>
-                              <p className="text-gray-600 mt-1">
-                                Amount: {scholarship.benefits}
-                              </p>
-                              <p className="text-gray-600">
-                                Deadline: {scholarship.deadline}
-                              </p>
-                              <p className="text-gray-600">
-                                State: {scholarship.state}
-                              </p>
-                              <span className="inline-block mt-2 px-3 py-1 bg-indigo-50 text-[#001a33] rounded-full text-sm">
-                                {scholarship.type}
-                              </span>
+                    <div className="max-h-[500px] overflow-y-auto p-4 border border-gray-300 rounded-lg">
+                      {displayedScholarships.length > 0 ? (
+                        displayedScholarships.map((scholarship) => (
+                          <div
+                            key={scholarship._id}
+                            className="bg-white p-4 rounded-lg shadow-sm border border-gray-400 hover:shadow-md transition-shadow mb-4"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="text-lg font-semibold">
+                                  {scholarship.schemeName}
+                                </h3>
+                                <p className="text-gray-600 mt-1">
+                                  Amount: {scholarship.benefits}
+                                </p>
+                                <p className="text-gray-600">
+                                  Deadline: {scholarship.deadline}
+                                </p>
+                                <p className="text-gray-600">
+                                  State: {scholarship.state}
+                                </p>
+                                <span className="inline-block mt-2 px-3 py-1 bg-indigo-50 text-[#001a33] rounded-full text-sm">
+                                  {scholarship.type}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => toggleFavorite(scholarship._id)}
+                                className="text-gray-400 hover:text-yellow-400"
+                              >
+                                {favorites.includes(scholarship._id) ? (
+                                  <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                                ) : (
+                                  <StarOff className="w-6 h-6" />
+                                )}
+                              </button>
                             </div>
-                            <button
-                              onClick={() => toggleFavorite(scholarship.id)}
-                              className="text-gray-400 hover:text-yellow-400"
-                            >
-                              {favorites.includes(scholarship.id) ? (
-                                <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
-                              ) : (
-                                <StarOff className="w-6 h-6" />
-                              )}
-                            </button>
+                            <div className="mt-4 flex gap-2">
+                              <button className="px-4 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90">
+                                Apply Now
+                              </button>
+                              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                Learn More
+                              </button>
+                            </div>
                           </div>
-                          <div className="mt-4 flex gap-2">
-                            <button className="px-4 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90">
-                              Apply Now
-                            </button>
-                            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                              Learn More
-                            </button>
-                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 bg-white rounded-lg border border-gray-400">
+                          <Search className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-600">
+                            {showFavorites
+                              ? "No favorite scholarships yet"
+                              : selectedState
+                              ? `No scholarships found in ${selectedState}`
+                              : "No scholarships found"}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {showFavorites
+                              ? "Click the star icon on any scholarship to add it to your favorites"
+                              : "Try adjusting your search or filters"}
+                          </p>
                         </div>
-                      )
-                    )}
-                    {showFavorites && favoriteScholarships.length === 0 && (
-                      <div className="text-center py-8 bg-white rounded-lg border border-gray-400">
-                        <Heart className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                        <p className="text-gray-600">
-                          No favorite scholarships yet
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Click the star icon on any scholarship to add it to
-                          your favorites
-                        </p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </section>
 

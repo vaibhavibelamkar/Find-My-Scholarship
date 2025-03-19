@@ -45,18 +45,17 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo and Website Name */}
-          <div className="flex items-center space-x-3">
-            <GraduationCap className="h-8 w-8 text-white" />
-            <span className="text-white font-bold text-xl">
-              FindMyScholarship
-            </span>
-          </div>
+          <div className="flex items-center space-x-3 ml-[-120px]">
+  <GraduationCap className="h-8 w-8 text-white" />
+  <span className="text-white font-bold text-xl">FindMyScholarship</span>
+</div>
+
 
           {/* Auth Buttons or User Profile */}
           <div className="flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 mr-50px" >
                   <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
                     <User className="h-5 w-5 text-[#001a33]" />
                   </div>
