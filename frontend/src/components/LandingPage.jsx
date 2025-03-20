@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   UserCircle,
@@ -73,11 +73,11 @@ const Slideshow = ({ scrollToAbout }) => {
                 {slide.description}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/user/scheme">
-        <button className="bg-[#001a33] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-white hover:text-black transition-colors">
-          Find Scholarships
-        </button>
-        </Link>
+                <Link to="/user/scheme">
+                  <button className="bg-[#001a33] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-white hover:text-black transition-colors">
+                    Find Scholarships
+                  </button>
+                </Link>
                 <button
                   onClick={scrollToAbout}
                   className="bg-[#001a33] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 hover:text-black transition-colors"
@@ -160,8 +160,10 @@ const HowItWorks = () => {
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#001a33]/20 to-transparent opacity-0 transition-opacity duration-500 hover:opacity-100"></div>
 
               {/* Animated Icon */}
-              <div className="w-16 h-16 flex items-center justify-center bg-[#001a33] rounded-full mb-4 transition-all duration-300 transform 
-              hover:scale-125 hover:rotate-6 hover:shadow-lg">
+              <div
+                className="w-16 h-16 flex items-center justify-center bg-[#001a33] rounded-full mb-4 transition-all duration-300 transform 
+              hover:scale-125 hover:rotate-6 hover:shadow-lg"
+              >
                 <step.icon className="w-8 h-8 text-white" />
               </div>
 
@@ -189,17 +191,12 @@ const HowItWorks = () => {
   );
 };
 
-
-
-
-
-
-
-
-
 function AboutUs() {
   return (
-    <section id="about" className="py-16 px-8 bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
+    <section
+      id="about"
+      className="py-16 px-8 bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen"
+    >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-gray-800">
@@ -380,9 +377,9 @@ const FAQ = () => {
 
 const LandingPage = () => {
   const scrollToAbout = () => {
-    const aboutSection = document.getElementById('about');
+    const aboutSection = document.getElementById("about");
     if (aboutSection) {
-      aboutSection.scrollIntoView({ behavior: 'smooth' });
+      aboutSection.scrollIntoView({ behavior: "smooth" });
     }
   };
 

@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 
 export const checkEligibility = async (req, res) => {
   try {
-    // const id = req.body.token;
     let decoded;
     try {
       decoded = jwt.verify(req.body.token, process.env.SECRET_KEY);

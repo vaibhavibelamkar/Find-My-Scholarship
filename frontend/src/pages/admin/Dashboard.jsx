@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import StudentsTable from "../../components/dashboard/StudentsTable";
 import AnnouncementsList from "../../components/dashboard/AnnouncementsList";
 import axios from "axios";
 import {
   LayoutDashboard,
-  GraduationCap,
   Award,
   Users,
   Bell,
@@ -12,49 +11,12 @@ import {
   PlusCircle,
   Trash2,
   Edit,
-  Send,
-  Eye,
-  CheckCircle2,
-  XCircle,
-  Search,
   X,
-  Calendar,
-  DollarSign,
-  Building,
-  FileText,
   ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
-
-// Mock data for scholarships/schemes
-const initialSchemes = [
-  {
-    id: 1,
-    name: "Merit Excellence Scholarship",
-    provider: "Government",
-    amount: 5000,
-    deadline: "2024-05-15",
-    description: "Scholarship for meritorious students",
-    eligibility: {
-      income: "Below $50,000",
-      academics: "GPA 3.5+",
-      category: "All",
-    },
-  },
-  {
-    id: 2,
-    name: "Need-Based Grant",
-    provider: "NGO",
-    amount: 3000,
-    deadline: "2024-06-01",
-    description: "Support for economically disadvantaged students",
-    eligibility: {
-      income: "Below $30,000",
-      academics: "GPA 3.0+",
-      category: "Undergraduate",
-    },
-  },
-];
+import { useNavigate } from "react-router-dom";
+import Scheme from "../user/Scheme.jsx";
 
 const students = [
   {
@@ -75,34 +37,15 @@ const students = [
   },
 ];
 
-const announcements = [
-  {
-    id: 1,
-    title: "Deadline Extension Notice",
-    content:
-      "The deadline for Merit Excellence Scholarship has been extended to May 30th, 2024",
-    date: "2024-03-05",
-    status: "scheduled",
-  },
-  {
-    id: 2,
-    title: "New Scholarship Launch",
-    content:
-      "Introducing new STEM scholarship opportunities for graduate students",
-    date: "2024-03-01",
-    status: "sent",
-  },
-];
-
 function Dashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
-  const [showNewScholarshipModal, setShowNewScholarshipModal] = useState(false);
-  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
-  const [schemes, setSchemes] = useState(initialSchemes);
+  const [schemes, setSchemes] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [selectedScheme, setSelectedScheme] = useState(null);
+  const [announcementData, setAnnouncementData] = useState(null);
   const [formData, setFormData] = useState({
     schemeName: "",
     gender: "",
@@ -115,6 +58,47 @@ function Dashboard() {
     schemeDocuments: "",
     siteLink: "",
   });
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchScholarships = async () => {
+      try {
+        const API_BASE_URL = "http://localhost:8080/api/scholarships/all";
+        const response = await axios.get(`${API_BASE_URL}`, {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.data?.success) {
+          setSchemes(response.data.data);
+        }
+      } catch (error) {
+        toast.error(error);
+      }
+    };
+
+    fetchScholarships();
+
+    const fetchAnnouncements = async () => {
+      try {
+        const API_BASE_URL = "http://localhost:8080/api/announcements/all";
+        const response = await axios.get(`${API_BASE_URL}`, {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.data?.success) {
+          console.log(response.data.data);
+          setAnnouncementData(response.data.data);
+        }
+      } catch (error) {
+        toast.error(error);
+      }
+    };
+    fetchAnnouncements();
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -125,6 +109,50 @@ function Dashboard() {
         [name]: value,
       };
     });
+  };
+
+  const handleAnnouncementInputChange = (e) => {
+    const { name, value } = e.target;
+    setAnnouncementData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSendAnnouncement = async () => {
+    const newAnnouncement = {
+      id: announcementData.length + 1,
+      title: announcementData.title,
+      content: announcementData.content,
+      date: new Date().toISOString().split("T")[0],
+      status: "sent",
+    };
+
+    // Add the new announcement to the list
+    announcementData.unshift(newAnnouncement);
+    // Clear the form and close the modal
+    setAnnouncementData({ title: "", content: "" });
+    setShowAnnouncementModal(false);
+
+    try {
+      const API_BASE_URL = "http://localhost:8080/api/admin/addannouncements";
+      const response = await axios.post(`${API_BASE_URL}`, announcementData, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.data?.success) {
+        toast.success(response.data.message);
+      } else {
+        toast.error(
+          response.data.message || "Invalid credentials. Please try again."
+        );
+      }
+    } catch (error) {
+      toast.error(errorMessage);
+    }
   };
 
   const handleAddScheme = async () => {
@@ -402,10 +430,10 @@ function Dashboard() {
                 Scheme Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Provider
+                State
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Amount
+                Benefits
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Deadline
@@ -418,16 +446,18 @@ function Dashboard() {
           <tbody className="bg-white divide-y divide-gray-200">
             {schemes.map((scheme) => (
               <tr key={scheme.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {scheme.name}
+                <td className="px-6 py-4 whitespace-nowrap max-w-xs overflow-hidden text-ellipsis">
+                  <div className="text-sm font-medium text-gray-900 truncate">
+                    {scheme.schemeName}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{scheme.provider}</div>
+                  <div className="text-sm text-gray-500">{scheme.state}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">${scheme.amount}</div>
+                <td className="px-6 py-4 whitespace-nowrap max-w-xs overflow-hidden text-ellipsis">
+                  <div className="text-sm font-medium text-gray-900 truncate">
+                    ${scheme.benefits}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500">{scheme.deadline}</div>
@@ -511,8 +541,7 @@ function Dashboard() {
               </button>
             </div>
             <p className="text-gray-500 mb-4">
-              Are you sure you want to delete "{selectedScheme?.name}"? This
-              action cannot be undone.
+              Are you sure you want to delete "{selectedScheme?.schemeName}"?
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -543,8 +572,85 @@ function Dashboard() {
         return <StudentsTable students={students} />;
 
       case "announcements":
-        return <AnnouncementsList announcements={announcements} />;
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold">Announcements</h2>
+              <button
+                onClick={() => setShowAnnouncementModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#002b4d] text-white rounded-lg hover:bg-[#004d80]"
+              >
+                <PlusCircle className="w-5 h-5" />
+                New Announcement
+              </button>
+            </div>
+            <AnnouncementsList announcements={announcementData} />
 
+            {/* New Announcement Modal */}
+            {showAnnouncementModal && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+                <div className="bg-white rounded-lg p-6 max-w-xl w-full mx-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">New Announcement</h2>
+                    <button
+                      onClick={() => setShowAnnouncementModal(false)}
+                      className="text-gray-400 hover:text-gray-500"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={announcementData.title}
+                        onChange={handleAnnouncementInputChange}
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        placeholder="Enter announcement title"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description
+                      </label>
+                      <textarea
+                        name="content"
+                        value={announcementData.content}
+                        onChange={handleAnnouncementInputChange}
+                        rows={4}
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        placeholder="Enter announcement description"
+                        required
+                      />
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                      <button
+                        onClick={() => setShowAnnouncementModal(false)}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSendAnnouncement}
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#002b4d] border border-transparent rounded-md hover:bg-[#004d80]"
+                      >
+                        Send Announcement
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case "scholarships":
+        return <Scheme />;
       default:
         return (
           <div className="space-y-6">
@@ -613,14 +719,14 @@ function Dashboard() {
               <div className="bg-white p-6 rounded-lg shadow-sm border">
                 <h3 className="font-semibold mb-4">Recent Announcements</h3>
                 <div className="space-y-4">
-                  {announcements.map((announcement) => (
+                  {(announcementData || []).map((announcement) => (
                     <div
                       key={announcement.id}
                       className="py-2 border-b last:border-b-0"
                     >
                       <div className="font-medium">{announcement.title}</div>
                       <div className="text-sm text-gray-500 mt-1">
-                        {announcement.date}
+                        {announcement.content}
                       </div>
                     </div>
                   ))}

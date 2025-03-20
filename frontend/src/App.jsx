@@ -44,6 +44,7 @@ const appRouter = createBrowserRouter([
     path: "/login",
     element: (
       <>
+        <Navbar />
         <Login />
       </>
     ),
@@ -61,6 +62,7 @@ const appRouter = createBrowserRouter([
     path: "user/scholarships/check-eligibility",
     element: (
       <>
+        <Navbar />
         <ProtectedRoute element={<ScholarshipForm />} />,
         {/* <ScholarshipForm /> */}
       </>
@@ -70,6 +72,7 @@ const appRouter = createBrowserRouter([
     path: "/reset-password/:id/:token",
     element: (
       <>
+        <Navbar />
         <ResetPassword />
       </>
     ),

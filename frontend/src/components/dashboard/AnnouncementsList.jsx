@@ -1,18 +1,7 @@
-import { Edit, Send, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 
 const AnnouncementsList = ({ announcements }) => (
   <div className="space-y-6">
-    <div className="flex justify-between items-center">
-      <h2 className="text-2xl font-semibold">Announcements</h2>
-      <button
-        onClick={() => setShowAnnouncementModal(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-[#242a4b] text-white rounded-lg hover:text-[#242a4b]"
-      >
-        <Send className="w-5 h-5" />
-        New Announcement
-      </button>
-    </div>
-
     <div className="grid gap-4">
       {announcements.map((announcement) => (
         <div

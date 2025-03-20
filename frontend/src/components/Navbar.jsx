@@ -2,13 +2,12 @@ import React, { useEffect, useState } from "react";
 import { GraduationCap, User, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { jwtDecode } from "jwt-decode"; // To decode JWT tokens
+import { jwtDecode } from "jwt-decode";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // Function to get cookie value
   const getCookie = (name) => {
     const cookies = document.cookie.split("; ");
     console.log(cookies);
@@ -19,13 +18,12 @@ const Navbar = () => {
     return null;
   };
 
-  // Function to check if user is logged in
   useEffect(() => {
-    const token = getCookie("token"); // Read token from cookie
+    const token = getCookie("token");
     if (token) {
       try {
-        const decoded = jwtDecode(token); // Decode token
-        setUser({ name: decoded.name }); // Set user state
+        const decoded = jwtDecode(token);
+        setUser({ name: decoded.name });
       } catch (error) {
         console.error("Invalid token", error);
         setUser(null);
@@ -33,7 +31,6 @@ const Navbar = () => {
     }
   }, []);
 
-  // Logout handler
   const logoutHandler = () => {
     document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     setUser(null);
@@ -46,21 +43,16 @@ const Navbar = () => {
         <div className="flex justify-between h-16 items-center">
           {/* Logo and Website Name */}
           <div className="flex items-center space-x-3 ml-[-120px]">
-  <GraduationCap className="h-8 w-8 text-white" />
-  <span className="text-white font-bold text-xl">FindMyScholarship</span>
-</div>
-
+            <GraduationCap className="h-8 w-8 text-white" />
+            <span className="text-white font-bold text-xl">
+              FindMyScholarship
+            </span>
+          </div>
 
           {/* Auth Buttons or User Profile */}
           <div className="flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-3 mr-50px" >
-                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                    <User className="h-5 w-5 text-[#001a33]" />
-                  </div>
-                  <span className="text-white">{user.name || "User"}</span>
-                </div>
                 <button
                   onClick={logoutHandler}
                   className="flex items-center space-x-2 px-4 py-2 text-white hover:text-[#242a4b] hover:bg-white rounded-md transition-colors duration-300"

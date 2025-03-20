@@ -6,6 +6,7 @@ import userRoute from "./routes/user.route.js";
 import adminRoute from "./routes/admin.route.js";
 import schemeRoute from "./routes/scheme.route.js";
 import authRoute from "./routes/auth.route.js";
+import announcementRoute from "./routes/announcement.route.js";
 import cors from "cors";
 
 dotenv.config({});
@@ -30,6 +31,8 @@ app.use("/api/auth", authRoute);
 app.use("/api/user", userRoute);
 app.use("/api/admin", adminRoute);
 app.use("/api/scholarships", schemeRoute);
+app.use("/api/announcements", announcementRoute);
+
 // app.use("/api/v1/course", courseRoute);
 // app.use("/api/v1/media", mediaRoute);
 // app.use("/api/v1/purchase", purchaseRoute);

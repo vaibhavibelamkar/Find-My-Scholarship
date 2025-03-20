@@ -7,7 +7,6 @@ import {
   HelpCircle,
   Star,
   StarOff,
-  Phone,
   ChevronRight,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -56,7 +55,7 @@ const indianStates = [
 ];
 
 function Dashboard() {
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState();
   const [scholarships, setScholarships] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
@@ -90,7 +89,7 @@ function Dashboard() {
             },
           }
         );
-        if (response.data?.success) {
+        if (response.data?.success && response.data?.user) {
           setUserData(response.data.user);
         }
       } catch (error) {
@@ -103,7 +102,7 @@ function Dashboard() {
     const fetchScholarships = async () => {
       try {
         const API_BASE_URL = "http://localhost:8080/api/scholarships/all";
-        const response = await axios.post(`${API_BASE_URL}`, {
+        const response = await axios.get(`${API_BASE_URL}`, {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
@@ -223,7 +222,9 @@ function Dashboard() {
                 {userData ? userData.username : ""}
               </p>
               <div className="flex items-center gap-1 text-xs text-gray-500">
-                <span className="truncate">{userData ? userData.email : ""}</span>
+                <span className="truncate">
+                  {userData ? userData.email : ""}
+                </span>
               </div>
             </div>
           </div>
@@ -258,7 +259,9 @@ function Dashboard() {
               >
                 <button
                   className={`w-full text-left p-1 rounded flex items-center justify-between ${
-                    activeFilter === "state" ? "text-[#001a33]" : "text-gray-400"
+                    activeFilter === "state"
+                      ? "text-[#001a33]"
+                      : "text-gray-400"
                   }`}
                 >
                   <span>

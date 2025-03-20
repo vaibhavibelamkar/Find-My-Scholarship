@@ -3,6 +3,6 @@ import { getSchemes } from "../controllers/scheme.controller.js";
 
 const router = express.Router();
 
-router.route("/all").post(getSchemes);
+router.route("/all").get(getSchemes);
 
 export default router;
