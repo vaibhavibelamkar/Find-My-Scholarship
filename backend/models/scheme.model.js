@@ -23,7 +23,7 @@ const schemeSchema = new mongoose.Schema(
       required: true,
     },
     annualIncome: {
-      type: String,
+      type: Number,
       required: true,
     },
     religion: {

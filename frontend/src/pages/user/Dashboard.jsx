@@ -61,6 +61,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const [showStateDropdown, setShowStateDropdown] = useState(false);
   const [selectedState, setSelectedState] = useState("");
+  const [announcementData, setAnnouncementData] = useState([]);
 
   useEffect(() => {
     const getCookie = (name) => {
@@ -117,6 +118,24 @@ function Dashboard() {
     };
 
     fetchScholarships();
+
+    const fetchAnnouncements = async () => {
+      try {
+        const API_BASE_URL = "http://localhost:8080/api/announcements/all";
+        const response = await axios.get(`${API_BASE_URL}`, {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.data?.success) {
+          setAnnouncementData(response.data.data || []);
+        }
+      } catch (error) {
+        toast.error(error);
+      }
+    };
+    fetchAnnouncements();
   }, [navigate]);
 
   const [activeFilter, setActiveFilter] = useState("all");
@@ -154,17 +173,10 @@ function Dashboard() {
         switch (activeFilter) {
           case "caste":
             return scholarship.caste;
-          case "deadline":
-            return true;
           default:
             return true;
         }
       });
-
-      // Sort by deadline if that filter is active
-      if (activeFilter === "deadline") {
-        filtered.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-      }
     }
 
     return filtered;
@@ -211,12 +223,11 @@ function Dashboard() {
         <div className="mt-5 mr-10 p-4 bg-white rounded-lg">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-100 shadow-md flex-shrink-0">
-            <img
-  src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
-  alt="Profile"
-  className="w-full h-full object-cover rounded-full"
-/>
-
+              <img
+                src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
+                alt="Profile"
+                className="w-full h-full object-cover rounded-full"
+              />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-700 truncate">
@@ -290,20 +301,17 @@ function Dashboard() {
                   </div>
                 )}
               </div>
-              {["caste", "deadline"].map((type) => (
-                <button
-                  key={type}
-                  className={`w-full text-left p-1 rounded ${
-                    activeFilter === type ? "text-[#001a33]" : "text-gray-400"
-                  }`}
-                  onClick={() => {
-                    setActiveFilter(type);
-                    setSelectedState("");
-                  }}
-                >
-                  {type === "caste" ? "Caste" : "Deadline"}
-                </button>
-              ))}
+              <button
+                className={`w-full text-left p-1 rounded ${
+                  activeFilter === "caste" ? "text-[#001a33]" : "text-gray-400"
+                }`}
+                onClick={() => {
+                  setActiveFilter("caste");
+                  setSelectedState("");
+                }}
+              >
+                Caste
+              </button>
             </div>
 
             <button
@@ -431,17 +439,14 @@ function Dashboard() {
                                   {scholarship.schemeName}
                                 </h3>
                                 <p className="text-gray-600 mt-1">
-                                  Amount: {scholarship.benefits}
+                                  Benefits: {scholarship.benefits}
                                 </p>
                                 <p className="text-gray-600">
-                                  Deadline: {scholarship.deadline}
+                                  Caste: {scholarship.casteCategory}
                                 </p>
                                 <p className="text-gray-600">
                                   State: {scholarship.state}
                                 </p>
-                                <span className="inline-block mt-2 px-3 py-1 bg-indigo-50 text-[#001a33] rounded-full text-sm">
-                                  {scholarship.type}
-                                </span>
                               </div>
                               <button
                                 onClick={() => toggleFavorite(scholarship._id)}
@@ -455,10 +460,23 @@ function Dashboard() {
                               </button>
                             </div>
                             <div className="mt-4 flex gap-2">
-                              <button className="px-4 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90">
+                              <button
+                                onClick={() =>
+                                  window.open(scholarship.siteLink, "_blank")
+                                }
+                                className="px-4 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90"
+                              >
                                 Apply Now
                               </button>
-                              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                              <button
+                                onClick={() =>
+                                  window.open(
+                                    scholarship.schemeDocuments,
+                                    "_blank"
+                                  )
+                                }
+                                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                              >
                                 Learn More
                               </button>
                             </div>
@@ -491,14 +509,14 @@ function Dashboard() {
                     <h2 className="text-lg font-semibold mb-3">
                       Announcements
                     </h2>
-                    {news.map((item) => (
+                    {announcementData.map((item) => (
                       <div
-                        key={item.id}
+                        key={item.title}
                         className="pb-3 mb-3 last:pb-0 last:mb-0"
                       >
                         <h3 className="text-sm font-medium">{item.title}</h3>
                         <p className="text-xs text-gray-600 mt-1">
-                          {item.date}
+                          {item.content}
                         </p>
                       </div>
                     ))}
