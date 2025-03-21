@@ -50,13 +50,13 @@ const appRouter = createBrowserRouter([
     ),
   },
   {
-    path: "/user/scheme",
+    path: "user/scheme",
     element: (
       <>
-        <ProtectedRoute element={<Scheme />} />
-        {/* <Scheme /> */}
+       <ProtectedRoute element={<Scheme />} />
       </>
-    ),
+     
+    )
   },
   {
     path: "user/scholarships/check-eligibility",

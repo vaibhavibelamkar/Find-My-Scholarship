@@ -13,6 +13,12 @@ import {
   Edit,
   X,
   ArrowLeft,
+  User,
+  Bell as BellIcon,
+  Shield,
+  Mail,
+  Key,
+  Save,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -39,13 +45,20 @@ const students = [
 
 function Dashboard() {
   const [activeSection, setActiveSection] = useState("dashboard");
-  const [schemes, setSchemes] = useState(null);
+  const [schemes, setSchemes] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [showEditAnnouncementModal, setShowEditAnnouncementModal] = useState(false);
+  const [showDeleteAnnouncementModal, setShowDeleteAnnouncementModal] = useState(false);
   const [selectedScheme, setSelectedScheme] = useState(null);
-  const [announcementData, setAnnouncementData] = useState(null);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [announcementData, setAnnouncementData] = useState([]);
+  const [newAnnouncement, setNewAnnouncement] = useState({
+    title: "",
+    content: "",
+  });
   const [formData, setFormData] = useState({
     schemeName: "",
     gender: "",
@@ -90,8 +103,7 @@ function Dashboard() {
           },
         });
         if (response.data?.success) {
-          console.log(response.data.data);
-          setAnnouncementData(response.data.data);
+          setAnnouncementData(response.data.data || []);
         }
       } catch (error) {
         toast.error(error);
@@ -113,30 +125,16 @@ function Dashboard() {
 
   const handleAnnouncementInputChange = (e) => {
     const { name, value } = e.target;
-    setAnnouncementData((prev) => ({
+    setNewAnnouncement((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
   const handleSendAnnouncement = async () => {
-    const newAnnouncement = {
-      id: announcementData.length + 1,
-      title: announcementData.title,
-      content: announcementData.content,
-      date: new Date().toISOString().split("T")[0],
-      status: "sent",
-    };
-
-    // Add the new announcement to the list
-    announcementData.unshift(newAnnouncement);
-    // Clear the form and close the modal
-    setAnnouncementData({ title: "", content: "" });
-    setShowAnnouncementModal(false);
-
     try {
       const API_BASE_URL = "http://localhost:8080/api/admin/addannouncements";
-      const response = await axios.post(`${API_BASE_URL}`, announcementData, {
+      const response = await axios.post(`${API_BASE_URL}`, newAnnouncement, {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
@@ -144,15 +142,92 @@ function Dashboard() {
       });
 
       if (response.data?.success) {
+        const newAnnouncementWithId = {
+          ...newAnnouncement,
+          id: Date.now(),
+          date: new Date().toISOString().split("T")[0],
+          status: "sent",
+        };
+        
+        setAnnouncementData((prev) => [newAnnouncementWithId, ...prev]);
+        setNewAnnouncement({ title: "", content: "" });
+        setShowAnnouncementModal(false);
         toast.success(response.data.message);
       } else {
         toast.error(
-          response.data.message || "Invalid credentials. Please try again."
+          response.data.message || "Failed to send announcement. Please try again."
         );
       }
     } catch (error) {
-      toast.error(errorMessage);
+      toast.error("Error sending announcement. Please try again.");
     }
+  };
+
+  const handleEditAnnouncement = async () => {
+    try {
+      const API_BASE_URL = "http://localhost:8080/api/admin/editannouncement";
+      const response = await axios.put(`${API_BASE_URL}/${selectedAnnouncement.id}`, newAnnouncement, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.data?.success) {
+        setAnnouncementData((prev) =>
+          prev.map((announcement) =>
+            announcement.id === selectedAnnouncement.id
+              ? { ...announcement, ...newAnnouncement }
+              : announcement
+          )
+        );
+        setShowEditAnnouncementModal(false);
+        setNewAnnouncement({ title: "", content: "" });
+        toast.success("Announcement updated successfully!");
+      } else {
+        toast.error(response.data.message || "Failed to update announcement");
+      }
+    } catch (error) {
+      toast.error("Error updating announcement");
+    }
+  };
+
+  const handleDeleteAnnouncement = async () => {
+    try {
+      const API_BASE_URL = "http://localhost:8080/api/admin/deleteannouncement";
+      const response = await axios.delete(`${API_BASE_URL}/${selectedAnnouncement.id}`, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.data?.success) {
+        setAnnouncementData((prev) =>
+          prev.filter((announcement) => announcement.id !== selectedAnnouncement.id)
+        );
+        setShowDeleteAnnouncementModal(false);
+        toast.success("Announcement deleted successfully!");
+      } else {
+        toast.error(response.data.message || "Failed to delete announcement");
+      }
+    } catch (error) {
+      toast.error("Error deleting announcement");
+    }
+  };
+
+  const openEditAnnouncementModal = (announcement) => {
+    setSelectedAnnouncement(announcement);
+    setNewAnnouncement({
+      title: announcement.title,
+      content: announcement.content,
+    });
+    setShowEditAnnouncementModal(true);
+  };
+
+  const openDeleteAnnouncementModal = (announcement) => {
+    setSelectedAnnouncement(announcement);
+    setShowDeleteAnnouncementModal(true);
   };
 
   const handleAddScheme = async () => {
@@ -225,7 +300,6 @@ function Dashboard() {
 
   const SchemeForm = ({ onSubmit, buttonText }) => (
     <form onSubmit={onSubmit} className="space-y-4">
-      {/* Scheme Name */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Scheme Name
@@ -240,7 +314,6 @@ function Dashboard() {
         />
       </div>
 
-      {/* Gender */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Gender
@@ -258,7 +331,6 @@ function Dashboard() {
         </select>
       </div>
 
-      {/* State */}
       <div>
         <label className="block text-sm font-medium text-gray-700">State</label>
         <input
@@ -271,7 +343,6 @@ function Dashboard() {
         />
       </div>
 
-      {/* Area of Residence */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Area of Residence
@@ -286,7 +357,6 @@ function Dashboard() {
         />
       </div>
 
-      {/* Caste Category */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Caste Category
@@ -301,7 +371,6 @@ function Dashboard() {
         />
       </div>
 
-      {/* Annual Income */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Annual Income
@@ -316,7 +385,6 @@ function Dashboard() {
         />
       </div>
 
-      {/* Religion */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Religion
@@ -331,7 +399,6 @@ function Dashboard() {
         />
       </div>
 
-      {/* Benefits */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Benefits
@@ -346,7 +413,6 @@ function Dashboard() {
         />
       </div>
 
-      {/* Scheme Documents */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Scheme Documents
@@ -361,7 +427,6 @@ function Dashboard() {
         />
       </div>
 
-      {/* Site Link */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
           Site Link
@@ -376,7 +441,6 @@ function Dashboard() {
         />
       </div>
 
-      {/* Action Buttons */}
       <div className="flex justify-end gap-3">
         <button
           type="button"
@@ -584,7 +648,64 @@ function Dashboard() {
                 New Announcement
               </button>
             </div>
-            <AnnouncementsList announcements={announcementData} />
+            
+            <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Title
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Content
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {announcementData.map((announcement) => (
+                    <tr key={announcement.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {announcement.title}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-500 max-w-md truncate">
+                          {announcement.content}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {new Date(announcement.date).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openEditAnnouncementModal(announcement)}
+                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                          >
+                            <Edit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => openDeleteAnnouncementModal(announcement)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {/* New Announcement Modal */}
             {showAnnouncementModal && (
@@ -593,7 +714,10 @@ function Dashboard() {
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">New Announcement</h2>
                     <button
-                      onClick={() => setShowAnnouncementModal(false)}
+                      onClick={() => {
+                        setShowAnnouncementModal(false);
+                        setNewAnnouncement({ title: "", content: "" });
+                      }}
                       className="text-gray-400 hover:text-gray-500"
                     >
                       <X className="w-5 h-5" />
@@ -607,7 +731,7 @@ function Dashboard() {
                       <input
                         type="text"
                         name="title"
-                        value={announcementData.title}
+                        value={newAnnouncement.title}
                         onChange={handleAnnouncementInputChange}
                         className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         placeholder="Enter announcement title"
@@ -620,7 +744,7 @@ function Dashboard() {
                       </label>
                       <textarea
                         name="content"
-                        value={announcementData.content}
+                        value={newAnnouncement.content}
                         onChange={handleAnnouncementInputChange}
                         rows={4}
                         className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -630,7 +754,10 @@ function Dashboard() {
                     </div>
                     <div className="flex justify-end gap-3 mt-6">
                       <button
-                        onClick={() => setShowAnnouncementModal(false)}
+                        onClick={() => {
+                          setShowAnnouncementModal(false);
+                          setNewAnnouncement({ title: "", content: "" });
+                        }}
                         className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                       >
                         Cancel
@@ -646,11 +773,239 @@ function Dashboard() {
                 </div>
               </div>
             )}
+
+            {/* Edit Announcement Modal */}
+            {showEditAnnouncementModal && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+                <div className="bg-white rounded-lg p-6 max-w-xl w-full mx-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">Edit Announcement</h2>
+                    <button
+                      onClick={() => {
+                        setShowEditAnnouncementModal(false);
+                        setNewAnnouncement({ title: "", content: "" });
+                      }}
+                      className="text-gray-400 hover:text-gray-500"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={newAnnouncement.title}
+                        onChange={handleAnnouncementInputChange}
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        placeholder="Enter announcement title"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description
+                      </label>
+                      <textarea
+                        name="content"
+                        value={newAnnouncement.content}
+                        onChange={handleAnnouncementInputChange}
+                        rows={4}
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        placeholder="Enter announcement description"
+                        required
+                      />
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                      <button
+                        onClick={() => {
+                          setShowEditAnnouncementModal(false);
+                          setNewAnnouncement({ title: "", content: "" });
+                        }}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleEditAnnouncement}
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#002b4d] border border-transparent rounded-md hover:bg-[#004d80]"
+                      >
+                        Update Announcement
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Delete Announcement Modal */}
+            {showDeleteAnnouncementModal && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">Delete Announcement</h2>
+                    <button
+                      onClick={() => setShowDeleteAnnouncementModal(false)}
+                      className="text-gray-400 hover:text-gray-500"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <p className="text-gray-500 mb-4">
+                    Are you sure you want to delete this announcement?
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setShowDeleteAnnouncementModal(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteAnnouncement}
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case "settings":
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold mb-6">Settings</h2>
+            
+            <div className="bg-white rounded-lg shadow-sm">
+              <div className="p-6 border-b">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
+                    <User className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold">Admin Profile</h3>
+                    <p className="text-gray-500">Manage your account settings and preferences</p>
+                  </div>
+                </div>
+
+                <form className="space-y-6 max-w-2xl">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        First Name
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        defaultValue="John"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Last Name
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        defaultValue="Doe"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      defaultValue="admin@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      defaultValue="+1 (555) 123-4567"
+                    />
+                  </div>
+                </form>
+              </div>
+
+              <div className="p-6 border-b">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <BellIcon className="w-6 h-6 text-[#001a33]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Notifications</h3>
+                    <p className="text-gray-500">Configure how you receive notifications</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Receive User Queries</h4>
+                      <p className="text-sm text-gray-500">Receive notifications via email</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-text-[#001a33] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-text-[#001a33]"></div>
+                    </label>
+                  </div>
+
+                  
+                  
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
+                    <Shield className="w-6 h-6 text-[#001a33]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Security</h3>
+                    <p className="text-gray-500">Manage your security preferences</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
+                    <Key className="w-5 h-5" />
+                    Change Password
+                  </button>
+                  <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
+                    <Shield className="w-5 h-5" />
+                    Two-Factor Authentication
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <button className="flex items-center gap-2 px-4 py-2 bg-[#002b4d] text-white rounded-lg hover:bg-[#004d80]">
+                <Save className="w-5 h-5" />
+                Save Changes
+              </button>
+            </div>
           </div>
         );
 
       case "scholarships":
         return <Scheme />;
+
       default:
         return (
           <div className="space-y-6">
@@ -719,7 +1074,7 @@ function Dashboard() {
               <div className="bg-white p-6 rounded-lg shadow-sm border">
                 <h3 className="font-semibold mb-4">Recent Announcements</h3>
                 <div className="space-y-4">
-                  {(announcementData || []).map((announcement) => (
+                  {announcementData.map((announcement) => (
                     <div
                       key={announcement.id}
                       className="py-2 border-b last:border-b-0"

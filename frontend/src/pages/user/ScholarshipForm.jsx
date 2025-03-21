@@ -280,8 +280,11 @@ export function ScholarshipForm() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <GraduationCap className="mx-auto h-12 w-12 text-[#001a33]" />
+        <div className="text-center mb-8 flex items-center justify-center gap-2">
+          <CheckCircle className="h-8 w-8 text-[#001a33]" />
+          <span className="text-2xl font-semibold text-[#001a33]">
+            Check Your Eligibility
+          </span>
         </div>
 
         <div className="bg-white shadow rounded-lg p-8">

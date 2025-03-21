@@ -211,11 +211,12 @@ function Dashboard() {
         <div className="mt-5 mr-10 p-4 bg-white rounded-lg">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-100 shadow-md flex-shrink-0">
-              <img
-                src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60"
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
+            <img
+  src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
+  alt="Profile"
+  className="w-full h-full object-cover rounded-full"
+/>
+
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-700 truncate">
@@ -488,7 +489,7 @@ function Dashboard() {
                 <aside>
                   <div className="bg-white h-full p-4 rounded-lg shadow-sm border border-gray-400">
                     <h2 className="text-lg font-semibold mb-3">
-                      News & Updates
+                      Announcements
                     </h2>
                     {news.map((item) => (
                       <div
