@@ -1,5 +1,7 @@
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+import { Scheme } from "../models/scheme.model.js";
+import { Question } from "../models/question.model.js";
 
 export const checkEligibility = async (req, res) => {
   try {
@@ -9,7 +11,7 @@ export const checkEligibility = async (req, res) => {
     } catch (error) {
       return res.status(400).json({ message: "Invalid token", success: false });
     }
-    console.log("Decoded Token:", decoded);
+    // console.log("Decoded Token:", decoded);
 
     const userId = decoded.userId;
     const {
@@ -105,8 +107,30 @@ export const checkEligibility = async (req, res) => {
       new: true,
     }).select("-password");
 
+    // Fetch all schemes
+    const schemes = await Scheme.find();
+
+    // Filter schemes based on user details and skip invalid criteria in the database
+    const eligibleSchemes = schemes.filter((scheme) => {
+      if (scheme.gender == "Both" || scheme.gender == user.gender)
+        if (scheme.state == "All" || scheme.state == user.state)
+          if (
+            scheme.annualIncome == "0" ||
+            Number(user.annualIncome) <= Number(scheme.annualIncome)
+          )
+            if (
+              scheme.casteCategory == "All" ||
+              scheme.casteCategory == "-" ||
+              scheme.casteCategory.split("/").includes(user.caste)
+            )
+              return true;
+
+      return false;
+    });
+    // console.log(eligibleSchemes);
     return res.status(201).json({
       success: true,
+      eligibleSchemes,
       message: "Profile updated successfully.",
     });
   } catch (error) {
@@ -138,4 +162,33 @@ export const getProfile = async (req, res) => {
     message: "User profile retrieved successfully.",
     user,
   });
+};
+
+export const sendQuestion = async (req, res) => {
+  try {
+    const { question, token, status } = req.body;
+
+    if (!question) {
+      return res.status(400).json({ message: "Question is required" });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.SECRET_KEY);
+    } catch (error) {
+      return res.status(400).json({ message: "Invalid token", success: false });
+    }
+    const userId = decoded.userId;
+
+    const newQuestion = new Question({
+      question,
+      user: userId || "Anonymous",
+      status,
+    });
+
+    await newQuestion.save();
+    res.status(201).json({ message: "Question submitted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
 };

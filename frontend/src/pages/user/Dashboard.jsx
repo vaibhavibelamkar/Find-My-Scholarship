@@ -63,16 +63,15 @@ function Dashboard() {
   const [selectedState, setSelectedState] = useState("");
   const [announcementData, setAnnouncementData] = useState([]);
 
+  const getCookie = (name) => {
+    const cookies = document.cookie.split("; ");
+    for (let cookie of cookies) {
+      const [key, value] = cookie.split("=");
+      if (key === name) return value;
+    }
+    return null;
+  };
   useEffect(() => {
-    const getCookie = (name) => {
-      const cookies = document.cookie.split("; ");
-      for (let cookie of cookies) {
-        const [key, value] = cookie.split("=");
-        if (key === name) return value;
-      }
-      return null;
-    };
-
     const fetchProfile = async () => {
       const token = getCookie("token");
       if (!token) {
@@ -189,10 +188,26 @@ function Dashboard() {
     );
   };
 
-  const handleQuestionSubmit = (e) => {
+  const handleQuestionSubmit = async (e) => {
     e.preventDefault();
-    setShowThankYou(true);
-    setQuestion("");
+    try {
+      const token = getCookie("token");
+      if (!token) {
+        toast.error("token not found");
+      }
+      const apiUrl = "http://localhost:8080/api/user/questions";
+      const response = await axios.post(apiUrl, {
+        question,
+        token,
+      });
+
+      if (response.status === 201) {
+        setShowThankYou(true);
+        setQuestion("");
+      }
+    } catch (error) {
+      toast.error("Error submitting question:", error);
+    }
     setTimeout(() => {
       setShowThankYou(false);
       setShowHelpForm(false);

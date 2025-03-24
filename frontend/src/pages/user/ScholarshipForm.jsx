@@ -126,6 +126,7 @@ function ProgressBar({ steps, currentStep }) {
 }
 
 export function ScholarshipForm() {
+  const [displayedScholarships, setDisplayedScholarships] = useState([]);
   const getCookie = (name) => {
     const cookies = document.cookie.split("; ");
     console.log(cookies);
@@ -267,6 +268,8 @@ export function ScholarshipForm() {
       );
 
       if (response.status === 201) {
+        console.log(response);
+        setDisplayedScholarships(response.data.eligibleSchemes || []);
         toast.success("Scheme checked successfully!");
       } else {
         toast.error("Failed to check schemes. Try again.");
@@ -661,37 +664,50 @@ export function ScholarshipForm() {
               </div>
 
               <div className="mt-6 space-y-4">
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    National Scholarship Portal
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-600">
-                    Merit-cum-Means Scholarship for Professional and Technical
-                    Courses
-                  </p>
-                  <a
-                    href="#"
-                    className="mt-3 inline-flex items-center text-sm text-[#001a33] hover:text-opacity-80"
-                  >
-                    Learn more
-                    <span className="ml-2">→</span>
-                  </a>
-                </div>
-
-                <div className="border rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    State Merit Scholarship
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-600">
-                    For high-achieving students in higher education
-                  </p>
-                  <a
-                    href="#"
-                    className="mt-3 inline-flex items-center text-sm text-[#001a33] hover:text-opacity-80"
-                  >
-                    Learn more
-                    <span className="ml-2">→</span>
-                  </a>
+                <div className="grid gap-3">
+                  <div className="max-h-[500px] overflow-y-auto p-4 border border-gray-300 rounded-lg">
+                    {displayedScholarships.map((scholarship) => (
+                      <div
+                        key={scholarship._id}
+                        className="bg-white p-4 rounded-lg shadow-sm border border-gray-400 hover:shadow-md transition-shadow mb-4"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-lg font-semibold">
+                              {scholarship.schemeName}
+                            </h3>
+                            <p className="text-gray-600 mt-1">
+                              Benefits: {scholarship.benefits}
+                            </p>
+                            <p className="text-gray-600">
+                              Caste: {scholarship.casteCategory}
+                            </p>
+                            <p className="text-gray-600">
+                              State: {scholarship.state}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex gap-2">
+                          <button
+                            onClick={() =>
+                              window.open(scholarship.siteLink, "_blank")
+                            }
+                            className="px-4 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90"
+                          >
+                            Apply Now
+                          </button>
+                          <button
+                            onClick={() =>
+                              window.open(scholarship.schemeDocuments, "_blank")
+                            }
+                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                          >
+                            Learn More
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </FormStep>
