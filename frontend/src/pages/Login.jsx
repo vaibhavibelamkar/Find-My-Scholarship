@@ -3,6 +3,7 @@ import { Mail, Lock, User, LogIn, UserPlus } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState("login");
@@ -36,6 +37,9 @@ const Login = () => {
       password: "",
       confirmPassword: "",
     };
+
+
+ 
 
     if (!signupInput.email) errors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(signupInput.email))
@@ -184,12 +188,19 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 via-white to-indigo-100">
       <div className="max-w-md w-full bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-indigo-50">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#001a33] mb-2">
-            Welcome Back
-          </h1>
-          <p className="text-gray-600">Sign in to continue to your account</p>
-        </div>
+      <div className="text-center mb-8 flex items-center justify-center relative">
+  <button
+    onClick={() => navigate("/")}
+    className="absolute left-0 text-[#001a33] hover:text-[#002b4d] p-1"
+  >
+    <ArrowLeft className="w-6 h-6" />
+  </button>
+  <h1 className="text-3xl font-bold text-[#001a33] ml-8">Welcome Back</h1>
+</div>
+<p className="text-gray-600 text-center">
+  Sign in to continue to your account
+</p>
+
 
         <div className="flex mb-8 bg-indigo-50 rounded-lg p-1">
           <button
@@ -221,6 +232,7 @@ const Login = () => {
             <UserPlus className="h-4 w-4" /> Sign Up
           </button>
         </div>
+        
 
         {/* Forgot Password Form */}
         {showForgotPassword && (
@@ -342,7 +354,7 @@ const Login = () => {
 
         {/* Sign Up Form */}
         {activeTab === "signup" && !showForgotPassword && (
-          <div className="space-y-6">
+          <div className="space-y-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email
