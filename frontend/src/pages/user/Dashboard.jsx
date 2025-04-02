@@ -240,7 +240,7 @@ function Dashboard() {
   ]);
   
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen flex 1 pt-16 p-6 bg-gray-50">
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-lg flex flex-col">
         {/* Profile Section - Moved up */}
@@ -405,7 +405,7 @@ function Dashboard() {
             </div>
 
             {/* Buttons */}
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 type="submit"
                 className="px-5 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90"
@@ -426,11 +426,11 @@ function Dashboard() {
               )}
               <form>
             {/* Scholarship Queries Section with Scrollable List */}
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-300 mt-6">
+            <div className="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-300 mt-5">
               <h2 className="text-lg font-semibold mb-4">Scholarship Queries</h2>
 
               {/* Scrollable Container */}
-              <div className="max-h-60 overflow-y-auto space-y-6">
+              <div className="max-h-40 overflow-y-auto space-y-6">
                 {/* Answered Queries */}
                 <div>
                   <h3 className="text-md font-medium text-green-700 mb-2">
