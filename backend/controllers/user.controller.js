@@ -180,15 +180,65 @@ export const sendQuestion = async (req, res) => {
     }
     const userId = decoded.userId;
 
+    // Get user information
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "User not found", success: false });
+    }
+
+    const userInfo = {
+      id: userId,
+      username: user.username,
+      email: user.email,
+    };
+
     const newQuestion = new Question({
       question,
-      user: userId || "Anonymous",
-      status,
+      user: userInfo,
+      status: "Pending",
     });
 
     await newQuestion.save();
-    res.status(201).json({ message: "Question submitted successfully" });
+    res.status(201).json({
+      success: true,
+      message: "Question submitted successfully",
+      data: newQuestion,
+    });
   } catch (error) {
+    console.error("Error submitting question:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
+};
+
+export const getUserQuestions = async (req, res) => {
+  try {
+    const token = req.query.token;
+    if (!token) {
+      return res
+        .status(400)
+        .json({ message: "Token is required", success: false });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.SECRET_KEY);
+    } catch (error) {
+      return res.status(400).json({ message: "Invalid token", success: false });
+    }
+
+    const userId = decoded.userId;
+    const questions = await Question.find({ "user.id": userId }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: questions,
+    });
+  } catch (error) {
+    console.error("Error fetching user questions:", error);
     res.status(500).json({ message: "Server error. Please try again later." });
   }
 };

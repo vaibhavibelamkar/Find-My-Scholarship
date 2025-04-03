@@ -62,6 +62,7 @@ function Dashboard() {
   const [showStateDropdown, setShowStateDropdown] = useState(false);
   const [selectedState, setSelectedState] = useState("");
   const [announcementData, setAnnouncementData] = useState([]);
+  const [userQuestions, setUserQuestions] = useState([]);
 
   const getCookie = (name) => {
     const cookies = document.cookie.split("; ");
@@ -134,7 +135,33 @@ function Dashboard() {
         toast.error(error);
       }
     };
+
+    const fetchUserQuestions = async () => {
+      try {
+        const token = getCookie("token");
+        if (!token) {
+          toast.error("token not found");
+          return;
+        }
+        const API_BASE_URL = "http://localhost:8080/api/user/questions";
+        const response = await axios.get(`${API_BASE_URL}?token=${token}`, {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.data?.success) {
+          setUserQuestions(response.data.data || []);
+        }
+      } catch (error) {
+        toast.error("Error fetching questions:", error);
+      }
+    };
+
+    fetchProfile();
+    fetchScholarships();
     fetchAnnouncements();
+    fetchUserQuestions();
   }, [navigate]);
 
   const [activeFilter, setActiveFilter] = useState("all");
@@ -194,6 +221,7 @@ function Dashboard() {
       const token = getCookie("token");
       if (!token) {
         toast.error("token not found");
+        return;
       }
       const apiUrl = "http://localhost:8080/api/user/questions";
       const response = await axios.post(apiUrl, {
@@ -201,12 +229,20 @@ function Dashboard() {
         token,
       });
 
-      if (response.status === 201) {
+      if (response.data?.success) {
         setShowThankYou(true);
         setQuestion("");
+        // Add the new question to the list immediately
+        setUserQuestions((prevQuestions) => [
+          response.data.data,
+          ...prevQuestions,
+        ]);
+      } else {
+        toast.error(response.data?.message || "Error submitting question");
       }
     } catch (error) {
-      toast.error("Error submitting question:", error);
+      console.error("Error submitting question:", error);
+      toast.error(error.response?.data?.message || "Error submitting question");
     }
     setTimeout(() => {
       setShowThankYou(false);
@@ -230,15 +266,27 @@ function Dashboard() {
     setShowStateDropdown(false);
   };
   const [answeredQueries, setAnsweredQueries] = useState([
-    { id: 1, question: "What are the eligibility criteria for XYZ scholarship?", answer: "The criteria include a minimum GPA of 3.5 and household income under $50,000." },
-    { id: 2, question: "When is the last date to apply for ABC scholarship?", answer: "The last date is April 15, 2025." },
+    {
+      id: 1,
+      question: "What are the eligibility criteria for XYZ scholarship?",
+      answer:
+        "The criteria include a minimum GPA of 3.5 and household income under $50,000.",
+    },
+    {
+      id: 2,
+      question: "When is the last date to apply for ABC scholarship?",
+      answer: "The last date is April 15, 2025.",
+    },
   ]);
-  
+
   const [pendingQueries, setPendingQueries] = useState([
-    { id: 3, question: "Can international students apply for this scholarship?" },
+    {
+      id: 3,
+      question: "Can international students apply for this scholarship?",
+    },
     { id: 4, question: "What documents are required for the application?" },
   ]);
-  
+
   return (
     <div className="h-screen flex 1 pt-16 p-6 bg-gray-50">
       {/* Sidebar */}
@@ -369,105 +417,114 @@ function Dashboard() {
         </div>
       </aside>
 
-    {/* Main Content */}
-<main className="flex-1">
-  <div className="h-screen p-6">
-    {showHelpForm ? (
-      <div className="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-400">
-        <h2 className="text-xl font-semibold mb-6">Help & FAQs</h2>
-        {showThankYou ? (
-          <div className="text-center py-8">
-            <p className="text-lg text-green-600">
-              Thanks for asking your question!
-            </p>
-            <p className="text-gray-600 mt-2">
-              You will receive an answer shortly.
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleQuestionSubmit} className="space-y-6">
-            {/* Question Input */}
-            <div>
-              <label
-                htmlFor="question"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Ask your question
-              </label>
-              <textarea
-                id="question"
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
-                rows={4}
-                required
-              />
-            </div>
+      {/* Main Content */}
+      <main className="flex-1">
+        <div className="h-screen p-6">
+          {showHelpForm ? (
+            <div className="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-400">
+              <h2 className="text-xl font-semibold mb-6">Help & FAQs</h2>
+              {showThankYou ? (
+                <div className="text-center py-8">
+                  <p className="text-lg text-green-600">
+                    Thanks for asking your question!
+                  </p>
+                  <p className="text-gray-600 mt-2">
+                    You will receive an answer shortly.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <form onSubmit={handleQuestionSubmit} className="space-y-6">
+                    {/* Question Input */}
+                    <div>
+                      <label
+                        htmlFor="question"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Ask your question
+                      </label>
+                      <textarea
+                        id="question"
+                        value={question}
+                        onChange={(e) => setQuestion(e.target.value)}
+                        className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
+                        rows={4}
+                        required
+                      />
+                    </div>
 
-            {/* Buttons */}
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="px-5 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90"
-              >
-                Send Question
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowHelpForm(false)}
-                className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-            </div>
+                    {/* Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        className="px-5 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90"
+                      >
+                        Send Question
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowHelpForm(false)}
+                        className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
 
-          </form>
-                
+                  {/* User's Question History */}
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4">
+                      Your Questions
+                    </h3>
+                    {userQuestions.length > 0 ? (
+                      <div className="space-y-4">
+                        {userQuestions.map((q) => (
+                          <div
+                            key={q._id}
+                            className="p-4 border border-gray-200 rounded-lg bg-white"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <p className="font-medium text-gray-900">
+                                  {q.question}
+                                </p>
+                                {q.status === "Answered" && q.answer && (
+                                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                                    <p className="text-sm font-medium text-gray-700">
+                                      Answer:
+                                    </p>
+                                    <p className="mt-1 text-gray-600">
+                                      {q.answer}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                              <span
+                                className={`ml-4 px-3 py-1 text-xs rounded-full ${
+                                  q.status === "Answered"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                                }`}
+                              >
+                                {q.status}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                              Asked on{" "}
+                              {new Date(q.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">
+                        You haven't asked any questions yet.
+                      </p>
+                    )}
+                  </div>
+                </>
               )}
-              <form>
-            {/* Scholarship Queries Section with Scrollable List */}
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-300 mt-5">
-              <h2 className="text-lg font-semibold mb-4">Scholarship Queries</h2>
-
-              {/* Scrollable Container */}
-              <div className="max-h-40 overflow-y-auto space-y-6">
-                {/* Answered Queries */}
-                <div>
-                  <h3 className="text-md font-medium text-green-700 mb-2">
-                    Answered Queries
-                  </h3>
-                  {answeredQueries.length > 0 ? (
-                    answeredQueries.map((query) => (
-                      <div key={query.id} className="border-b py-3 last:border-none">
-                        <p className="text-sm font-semibold">Q: {query.question}</p>
-                        <p className="text-sm text-gray-700 mt-1">A: {query.answer}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">No answered queries yet.</p>
-                  )}
-                </div>
-
-                {/* Pending Queries */}
-                <div>
-                  <h3 className="text-md font-medium text-red-600 mb-2">
-                    Pending Queries
-                  </h3>
-                  {pendingQueries.length > 0 ? (
-                    pendingQueries.map((query) => (
-                      <div key={query.id} className="border-b py-3 last:border-none">
-                        <p className="text-sm font-semibold">Q: {query.question}</p>
-                        <p className="text-sm text-gray-500 italic">Awaiting response...</p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">No pending queries.</p>
-                  )}
-                </div>
-              </div>
-            </div></form>
             </div>
-            
           ) : (
             <div className="h-full flex flex-col">
               {/* Search Bar */}

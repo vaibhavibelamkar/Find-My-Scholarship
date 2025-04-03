@@ -8,13 +8,28 @@ const questionSchema = new mongoose.Schema(
       trim: true,
     },
     user: {
-      type: mongoose.Schema.Types.ObjectId,
-      default: "Anonymous",
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: "Anonymous",
+      },
+      username: {
+        type: String,
+        default: "Anonymous",
+      },
+      email: {
+        type: String,
+        default: "Anonymous",
+      },
     },
     status: {
       type: String,
       enum: ["Pending", "Answered"],
       default: "Pending",
+    },
+    answer: {
+      type: String,
+      default: "",
     },
   },
   {

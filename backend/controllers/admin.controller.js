@@ -1,4 +1,5 @@
 import { Announcement } from "../models/announcement.model.js";
+import { Question } from "../models/question.model.js";
 import { Scheme } from "../models/scheme.model.js";
 
 export const addScheme = async (req, res) => {
@@ -83,6 +84,77 @@ export const addAnnouncements = async (req, res) => {
     return res.status(400).json({
       success: false,
       message: "Error in adding announcement",
+    });
+  }
+};
+
+export const getAllQuestions = async (req, res) => {
+  try {
+    const questions = await Question.find().sort({ createdAt: -1 });
+    return res.status(200).json({
+      success: true,
+      data: questions,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: "Error fetching questions",
+      error: error.message,
+    });
+  }
+};
+
+// Answer a question
+export const answerQuestion = async (req, res) => {
+  try {
+    const { answer, status } = req.body;
+    const question = await Question.findByIdAndUpdate(
+      req.params.id,
+      { answer, status },
+      { new: true }
+    );
+
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: "Question not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: question,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error answering question",
+      error: error.message,
+    });
+  }
+};
+
+// Delete a question
+export const deleteQuestion = async (req, res) => {
+  try {
+    const question = await Question.findByIdAndDelete(req.params.id);
+
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: "Question not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Question deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error deleting question",
+      error: error.message,
     });
   }
 };

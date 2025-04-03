@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import StudentsTable from "../../components/dashboard/StudentsTable";
-import AnnouncementsList from "../../components/dashboard/AnnouncementsList";
 import axios from "axios";
 import {
   LayoutDashboard,
@@ -19,6 +18,7 @@ import {
   Mail,
   Key,
   Save,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -50,8 +50,10 @@ function Dashboard() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
-  const [showEditAnnouncementModal, setShowEditAnnouncementModal] = useState(false);
-  const [showDeleteAnnouncementModal, setShowDeleteAnnouncementModal] = useState(false);
+  const [showEditAnnouncementModal, setShowEditAnnouncementModal] =
+    useState(false);
+  const [showDeleteAnnouncementModal, setShowDeleteAnnouncementModal] =
+    useState(false);
   const [selectedScheme, setSelectedScheme] = useState(null);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [announcementData, setAnnouncementData] = useState([]);
@@ -71,6 +73,11 @@ function Dashboard() {
     schemeDocuments: "",
     siteLink: "",
   });
+  const [userQuestions, setUserQuestions] = useState([]);
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [showAnswerModal, setShowAnswerModal] = useState(false);
+  const [showDeleteQuestionModal, setShowDeleteQuestionModal] = useState(false);
+  const [answer, setAnswer] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -110,6 +117,25 @@ function Dashboard() {
       }
     };
     fetchAnnouncements();
+
+    const fetchUserQuestions = async () => {
+      try {
+        const API_BASE_URL = "http://localhost:8080/api/admin/questions";
+        const response = await axios.get(`${API_BASE_URL}`, {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.data?.success) {
+          setUserQuestions(response.data.data || []);
+        }
+      } catch (error) {
+        toast.error("Error fetching questions:", error);
+      }
+    };
+
+    fetchUserQuestions();
   }, [navigate]);
 
   const handleInputChange = (e) => {
@@ -148,14 +174,15 @@ function Dashboard() {
           date: new Date().toISOString().split("T")[0],
           status: "sent",
         };
-        
+
         setAnnouncementData((prev) => [newAnnouncementWithId, ...prev]);
         setNewAnnouncement({ title: "", content: "" });
         setShowAnnouncementModal(false);
         toast.success(response.data.message);
       } else {
         toast.error(
-          response.data.message || "Failed to send announcement. Please try again."
+          response.data.message ||
+            "Failed to send announcement. Please try again."
         );
       }
     } catch (error) {
@@ -166,12 +193,16 @@ function Dashboard() {
   const handleEditAnnouncement = async () => {
     try {
       const API_BASE_URL = "http://localhost:8080/api/admin/editannouncement";
-      const response = await axios.put(`${API_BASE_URL}/${selectedAnnouncement.id}`, newAnnouncement, {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.put(
+        `${API_BASE_URL}/${selectedAnnouncement.id}`,
+        newAnnouncement,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.data?.success) {
         setAnnouncementData((prev) =>
@@ -195,16 +226,21 @@ function Dashboard() {
   const handleDeleteAnnouncement = async () => {
     try {
       const API_BASE_URL = "http://localhost:8080/api/admin/deleteannouncement";
-      const response = await axios.delete(`${API_BASE_URL}/${selectedAnnouncement.id}`, {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.delete(
+        `${API_BASE_URL}/${selectedAnnouncement.id}`,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.data?.success) {
         setAnnouncementData((prev) =>
-          prev.filter((announcement) => announcement.id !== selectedAnnouncement.id)
+          prev.filter(
+            (announcement) => announcement.id !== selectedAnnouncement.id
+          )
         );
         setShowDeleteAnnouncementModal(false);
         toast.success("Announcement deleted successfully!");
@@ -296,6 +332,65 @@ function Dashboard() {
   const openDeleteModal = (scheme) => {
     setSelectedScheme(scheme);
     setShowDeleteModal(true);
+  };
+
+  const handleAnswerSubmit = async () => {
+    try {
+      const API_BASE_URL = "http://localhost:8080/api/admin/questions";
+      const response = await axios.put(
+        `${API_BASE_URL}/${selectedQuestion._id}`,
+        {
+          answer,
+          status: "Answered",
+        },
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data?.success) {
+        setUserQuestions((prev) =>
+          prev.map((q) =>
+            q._id === selectedQuestion._id
+              ? { ...q, answer, status: "Answered" }
+              : q
+          )
+        );
+        setShowAnswerModal(false);
+        setAnswer("");
+        toast.success("Answer submitted successfully!");
+      }
+    } catch (error) {
+      toast.error("Error submitting answer:", error);
+    }
+  };
+
+  const handleDeleteQuestion = async () => {
+    try {
+      const API_BASE_URL = "http://localhost:8080/api/admin/questions";
+      const response = await axios.delete(
+        `${API_BASE_URL}/${selectedQuestion._id}`,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data?.success) {
+        setUserQuestions((prev) =>
+          prev.filter((q) => q._id !== selectedQuestion._id)
+        );
+        setShowDeleteQuestionModal(false);
+        toast.success("Question deleted successfully!");
+      }
+    } catch (error) {
+      toast.error("Error deleting question:", error);
+    }
   };
 
   const SchemeForm = ({ onSubmit, buttonText }) => (
@@ -648,7 +743,7 @@ function Dashboard() {
                 New Announcement
               </button>
             </div>
-            
+
             <div className="bg-white shadow-sm rounded-lg overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -688,13 +783,17 @@ function Dashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex gap-2">
                           <button
-                            onClick={() => openEditAnnouncementModal(announcement)}
+                            onClick={() =>
+                              openEditAnnouncementModal(announcement)
+                            }
                             className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
                           >
                             <Edit className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => openDeleteAnnouncementModal(announcement)}
+                            onClick={() =>
+                              openDeleteAnnouncementModal(announcement)
+                            }
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
                           >
                             <Trash2 className="w-5 h-5" />
@@ -846,7 +945,9 @@ function Dashboard() {
               <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
                 <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Delete Announcement</h2>
+                    <h2 className="text-xl font-semibold">
+                      Delete Announcement
+                    </h2>
                     <button
                       onClick={() => setShowDeleteAnnouncementModal(false)}
                       className="text-gray-400 hover:text-gray-500"
@@ -881,7 +982,7 @@ function Dashboard() {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold mb-6">Settings</h2>
-            
+
             <div className="bg-white rounded-lg shadow-sm">
               <div className="p-6 border-b">
                 <div className="flex items-center gap-4 mb-6">
@@ -890,7 +991,9 @@ function Dashboard() {
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold">Admin Profile</h3>
-                    <p className="text-gray-500">Manage your account settings and preferences</p>
+                    <p className="text-gray-500">
+                      Manage your account settings and preferences
+                    </p>
                   </div>
                 </div>
 
@@ -949,7 +1052,9 @@ function Dashboard() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Notifications</h3>
-                    <p className="text-gray-500">Configure how you receive notifications</p>
+                    <p className="text-gray-500">
+                      Configure how you receive notifications
+                    </p>
                   </div>
                 </div>
 
@@ -957,16 +1062,19 @@ function Dashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-medium">Receive User Queries</h4>
-                      <p className="text-sm text-gray-500">Receive notifications via email</p>
+                      <p className="text-sm text-gray-500">
+                        Receive notifications via email
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        defaultChecked
+                      />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-text-[#001a33] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-text-[#001a33]"></div>
                     </label>
                   </div>
-
-                  
-                  
                 </div>
               </div>
 
@@ -977,7 +1085,9 @@ function Dashboard() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Security</h3>
-                    <p className="text-gray-500">Manage your security preferences</p>
+                    <p className="text-gray-500">
+                      Manage your security preferences
+                    </p>
                   </div>
                 </div>
 
@@ -1005,6 +1115,215 @@ function Dashboard() {
 
       case "scholarships":
         return <Scheme />;
+
+      case "faqs":
+        return (
+          <div className="space-y-6">
+            <div className="mb-6 flex flex-col">
+              <button
+                onClick={() => setActiveSection("dashboard")}
+                className="flex items-center gap-2 text-[#002b4d] hover:text-[#004d80] mb-2 w-max"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Dashboard
+              </button>
+              <h2 className="text-2xl font-semibold">User Questions</h2>
+            </div>
+
+            <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Question
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Asked By
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {userQuestions.map((question) => (
+                    <tr key={question._id}>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {question.question}
+                        </div>
+                        {/* {question.answer && (
+                          <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                            <p className="text-sm font-medium text-gray-700">
+                              Answer:
+                            </p>
+                            <p className="mt-1 text-sm text-gray-600">
+                              {question.answer}
+                            </p>
+                          </div>
+                        )} */}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {question.user.username}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {question.user.email}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-3 py-1 text-xs rounded-full ${
+                            question.status === "Answered"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {question.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {new Date(question.createdAt).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedQuestion(question);
+                              setAnswer(question.answer || "");
+                              setShowAnswerModal(true);
+                            }}
+                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                          >
+                            <Edit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedQuestion(question);
+                              setShowDeleteQuestionModal(true);
+                            }}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Answer Modal */}
+            {showAnswerModal && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+                <div className="bg-white rounded-lg p-6 max-w-xl w-full mx-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">
+                      {selectedQuestion?.status === "Answered"
+                        ? "Edit Answer"
+                        : "Answer Question"}
+                    </h2>
+                    <button
+                      onClick={() => {
+                        setShowAnswerModal(false);
+                        setAnswer("");
+                      }}
+                      className="text-gray-400 hover:text-gray-500"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Question
+                      </label>
+                      <p className="text-gray-900 p-3 bg-gray-50 rounded-lg">
+                        {selectedQuestion?.question}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Answer
+                      </label>
+                      <textarea
+                        value={answer}
+                        onChange={(e) => setAnswer(e.target.value)}
+                        rows={4}
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        placeholder="Enter your answer here"
+                        required
+                      />
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                      <button
+                        onClick={() => {
+                          setShowAnswerModal(false);
+                          setAnswer("");
+                        }}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleAnswerSubmit}
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#002b4d] border border-transparent rounded-md hover:bg-[#004d80]"
+                      >
+                        {selectedQuestion?.status === "Answered"
+                          ? "Update Answer"
+                          : "Submit Answer"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Delete Question Modal */}
+            {showDeleteQuestionModal && (
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">Delete Question</h2>
+                    <button
+                      onClick={() => setShowDeleteQuestionModal(false)}
+                      className="text-gray-400 hover:text-gray-500"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <p className="text-gray-500 mb-4">
+                    Are you sure you want to delete this question? This action
+                    cannot be undone.
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setShowDeleteQuestionModal(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteQuestion}
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
 
       default:
         return (
@@ -1094,9 +1413,9 @@ function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 pt-16">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg">
+      <div className="w-64 bg-white shadow-lg fixed left-0 top-16 h-[calc(100vh-4rem)]">
         <nav className="mt-8">
           <div className="px-4 space-y-2">
             <button
@@ -1146,12 +1465,24 @@ function Dashboard() {
               <Settings className="w-5 h-5" />
               Settings
             </button>
+
+            <button
+              onClick={() => setActiveSection("faqs")}
+              className={`w-full flex items-center gap-2 p-2 rounded-lg ${
+                activeSection === "faqs"
+                  ? "bg-indigo-50 text-[#242a4b]"
+                  : "text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              <HelpCircle className="w-5 h-5" />
+              User FAQs
+            </button>
           </div>
         </nav>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8">{renderDashboardContent()}</div>
+      <div className="flex-1 ml-64 p-8">{renderDashboardContent()}</div>
     </div>
   );
 }
