@@ -21,26 +21,6 @@ const appRouter = createBrowserRouter([
     ),
   },
   {
-    path: "/user/dashboard",
-    element: (
-      <>
-        <Navbar />
-        <ProtectedRoute element={<UserDashboard />} />
-        {/* <UserDashboard /> */}
-      </>
-    ),
-  },
-  {
-    path: "/admin/dashboard",
-    element: (
-      <>
-        <Navbar />
-        {/*<ProtectedRoute element={<AdminDashboard />} />*/}
-        <AdminDashboard />
-      </>
-    ),
-  },
-  {
     path: "/login",
     element: (
       <>
@@ -50,30 +30,51 @@ const appRouter = createBrowserRouter([
     ),
   },
   {
-    path: "user/scheme",
-    element: (
-      <>
-       <ProtectedRoute element={<Scheme />} />
-      </>
-     
-    )
-  },
-  {
-    path: "user/scholarships/check-eligibility",
-    element: (
-      <>
-        <Navbar />
-        <ProtectedRoute element={<ScholarshipForm />} />,
-        {/* <ScholarshipForm /> */}
-      </>
-    ),
-  },
-  {
     path: "/reset-password/:id/:token",
     element: (
       <>
         <Navbar />
         <ResetPassword />
+      </>
+    ),
+  },
+
+  // ✅ Protected User Routes
+  {
+    path: "/user/dashboard",
+    element: (
+      <>
+        <Navbar />
+        <ProtectedRoute element={<UserDashboard />} allowedRole="user" />
+      </>
+    ),
+  },
+  {
+    path: "/user/scheme",
+    element: (
+      <>
+        <Navbar />
+        <ProtectedRoute element={<Scheme />} allowedRole="user" />
+      </>
+    ),
+  },
+  {
+    path: "/user/scholarships/check-eligibility",
+    element: (
+      <>
+        <Navbar />
+        <ProtectedRoute element={<ScholarshipForm />} allowedRole="user" />
+      </>
+    ),
+  },
+
+  // ✅ Protected Admin Route
+  {
+    path: "/admin/dashboard",
+    element: (
+      <>
+        <Navbar />
+        <ProtectedRoute element={<AdminDashboard />} allowedRole="admin" />
       </>
     ),
   },

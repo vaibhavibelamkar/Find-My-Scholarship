@@ -6,7 +6,7 @@ import { generateToken } from "../utils/generateToken.js";
 
 export const register = async (req, res) => {
   try {
-    const { email, password, username } = req.body;
+    const { email, password, username, role = "user"  } = req.body;
     if (!email || !password || !username) {
       return res.status(400).json({
         success: false,
@@ -25,6 +25,7 @@ export const register = async (req, res) => {
       email,
       password: hashedPassword,
       username,
+      role, // ✅ Save the role in DB (defaults to "user" unless explicitly passed)
     });
     return res.status(201).json({
       success: true,
@@ -62,7 +63,7 @@ export const login = async (req, res) => {
         message: "Incorrect password or email.",
       });
     }
-    generateToken(res, user, `Welcome User !!!`);
+    generateToken(res, user, `Welcome ${user.role === "admin" ? "Admin" : "User"}!`);
   } catch (error) {
     console.log(error);
     return res.status(400).json({

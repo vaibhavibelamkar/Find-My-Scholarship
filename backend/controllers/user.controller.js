@@ -143,21 +143,29 @@ export const checkEligibility = async (req, res) => {
 };
 
 export const getProfile = async (req, res) => {
+  const token = req.body.token; // Changed from req.headers.authorization
+
+  if (!token) {
+    return res.status(401).json({ message: "No token provided", success: false });
+  }
   let decoded;
   try {
-    decoded = jwt.verify(req.body.token, process.env.SECRET_KEY);
+    decoded = jwt.verify(token, process.env.SECRET_KEY);
   } catch (error) {
-    return res.status(400).json({ message: "Invalid token", success: false });
+    return res.status(401).json({ message: "Invalid token", success: false });
   }
+
   const userId = decoded.userId;
   const user = await User.findOne({ _id: userId });
+
   if (!user) {
-    return res.status(400).json({
+    return res.status(404).json({
       success: false,
       message: "User not found.",
     });
   }
-  return res.status(201).json({
+
+  return res.status(200).json({
     success: true,
     message: "User profile retrieved successfully.",
     user,

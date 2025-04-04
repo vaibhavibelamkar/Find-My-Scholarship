@@ -1,15 +1,50 @@
+import {jwtDecode} from "jwt-decode";
 import { Navigate } from "react-router-dom";
 
-// Function to check if the user is authenticated
-const isAuthenticated = () => {
-  const token = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("token="));
-  return token ? true : false;
+
+const getAuthData = () => {
+  // Parse cookies into an object
+  const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
+    const [key, value] = cookie.split("=");
+    acc[key] = value;
+    return acc;
+  }, {});
+
+  const token = cookies.token || null;
+  let role = null;
+
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      role = decoded.role;
+    } catch (error) {
+      console.error("Error decoding token:", error);
+    }
+  }
+
+  return {
+    token,
+    role,
+  };
 };
 
-const ProtectedRoute = ({ element }) => {
-  return isAuthenticated() ? element : <Navigate to="/login" replace />;
+  // ProtectedRoute with role-based access
+  const ProtectedRoute = ({ element, allowedRole }) => {
+    const { token, role } = getAuthData();
+    console.log("Tokennnn:"+token)
+
+  console.log("User Role:", role); // Debugging
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRole && role !== allowedRole) {
+    alert("Access Denied! Required: " + allowedRole + ", Found: " + role);
+    return <Navigate to="/login" replace />;
+  }
+
+  return element;
 };
 
 export default ProtectedRoute;

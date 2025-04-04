@@ -5,12 +5,18 @@ import {
   sendQuestion,
   getUserQuestions,
 } from "../controllers/user.controller.js";
+import { protect, userOnly } from "../middlewares/authMiddleware.js"; 
 
 const router = express.Router();
 
-router.route("/scholarships/check-eligibility").post(checkEligibility);
-router.route("/profile").post(getProfile);
-router.route("/questions").post(sendQuestion);
-router.route("/questions").get(getUserQuestions);
+router
+  .route("/scholarships/check-eligibility")
+  .post(protect, userOnly, checkEligibility);
+
+router.route("/profile").post(protect, userOnly, getProfile);
+
+router.route("/questions")
+  .post(protect, userOnly, sendQuestion)
+  .get(protect, userOnly, getUserQuestions);
 
 export default router;
