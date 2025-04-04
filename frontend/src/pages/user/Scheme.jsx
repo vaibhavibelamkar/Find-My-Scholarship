@@ -62,7 +62,7 @@ function Scheme() {
   });
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden mt-16">
       {/* Search and Filters */}
       <div className="container mx-auto px-4 mt-0 flex flex-col">
         <div className="bg-white rounded-xl shadow-lg p-6 mb-4 sticky top-0 z-10">

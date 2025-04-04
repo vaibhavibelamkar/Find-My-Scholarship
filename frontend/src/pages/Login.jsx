@@ -195,7 +195,7 @@ const Login = () => {
   }`;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 via-white to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 via-white to-indigo-100 mt-16">
       <div className="max-w-md w-full bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-indigo-50">
         <div className="text-center mb-8 flex items-center justify-center relative">
           <button

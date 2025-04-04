@@ -9,9 +9,7 @@ import { protect, userOnly } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router
-  .route("/scholarships/check-eligibility")
-  .post(protect, userOnly, checkEligibility);
+router.route("/scholarships/check-eligibility").post(checkEligibility);
 
 router.route("/profile").post(protect, userOnly, getProfile);
 

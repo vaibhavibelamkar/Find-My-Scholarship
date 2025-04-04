@@ -41,7 +41,7 @@ const STATES = [
   "Uttarakhand",
   "West Bengal",
 ];
-
+const GENDER = ["Male", "Female"];
 const RELIGIONS = [
   "Hindu",
   "Muslim",
@@ -281,7 +281,7 @@ export function ScholarshipForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 mt-16">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8 flex items-center justify-center gap-2">
           <CheckCircle className="h-8 w-8 text-[#001a33]" />
@@ -439,6 +439,26 @@ export function ScholarshipForm() {
                   {RELIGIONS.map((religion) => (
                     <option key={religion} value={religion}>
                       {religion}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+
+              <FormField
+                label="Gender"
+                hint="Choose your gender"
+                error={errors.gender}
+              >
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#001a33] focus:ring-[#001a33]"
+                >
+                  <option value="">Select Gender</option>
+                  {GENDER.map((gender) => (
+                    <option key={gender} value={gender}>
+                      {gender}
                     </option>
                   ))}
                 </select>

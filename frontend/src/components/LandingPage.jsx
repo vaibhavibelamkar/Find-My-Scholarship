@@ -49,7 +49,7 @@ const Slideshow = ({ scrollToAbout }) => {
   }, []);
 
   return (
-    <div className="relative h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="relative h-[calc(100vh-4rem)] overflow-hidden mt-16">
       {/* Slides */}
       {slides.map((slide, index) => (
         <div
@@ -322,7 +322,7 @@ const FAQ = () => {
   };
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-16 bg-gray-50 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-4">
           <p className="text-gray-600 text-lg">Frequently Asked Questions</p>

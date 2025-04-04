@@ -11,8 +11,6 @@ export const checkEligibility = async (req, res) => {
     } catch (error) {
       return res.status(400).json({ message: "Invalid token", success: false });
     }
-    // console.log("Decoded Token:", decoded);
-
     const userId = decoded.userId;
     const {
       fullName,
@@ -25,6 +23,7 @@ export const checkEligibility = async (req, res) => {
       annualIncome,
       profession,
       caste,
+      gender,
       religion,
       state,
       minorityStatus,
@@ -60,6 +59,7 @@ export const checkEligibility = async (req, res) => {
       !annualIncome ||
       !profession ||
       !caste ||
+      !gender ||
       !religion ||
       !state ||
       // Education Details
@@ -87,6 +87,7 @@ export const checkEligibility = async (req, res) => {
       annualIncome,
       profession,
       caste,
+      gender,
       religion,
       state,
       minorityStatus,
@@ -109,19 +110,18 @@ export const checkEligibility = async (req, res) => {
 
     // Fetch all schemes
     const schemes = await Scheme.find();
-
     // Filter schemes based on user details and skip invalid criteria in the database
     const eligibleSchemes = schemes.filter((scheme) => {
-      if (scheme.gender == "Both" || scheme.gender == user.gender)
-        if (scheme.state == "All" || scheme.state == user.state)
+      if (scheme.gender == "Both" || scheme.gender == gender)
+        if (scheme.state == "All" || scheme.state == state)
           if (
             scheme.annualIncome == "0" ||
-            Number(user.annualIncome) <= Number(scheme.annualIncome)
+            Number(annualIncome) <= Number(scheme.annualIncome)
           )
             if (
               scheme.casteCategory == "All" ||
               scheme.casteCategory == "-" ||
-              scheme.casteCategory.split("/").includes(user.caste)
+              scheme.casteCategory.split("/").includes(caste)
             )
               return true;
 
