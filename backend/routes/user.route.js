@@ -5,7 +5,7 @@ import {
   sendQuestion,
   getUserQuestions,
 } from "../controllers/user.controller.js";
-import { protect, userOnly } from "../middlewares/authMiddleware.js"; 
+import { protect, userOnly } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -15,7 +15,8 @@ router
 
 router.route("/profile").post(protect, userOnly, getProfile);
 
-router.route("/questions")
+router
+  .route("/questions")
   .post(protect, userOnly, sendQuestion)
   .get(protect, userOnly, getUserQuestions);
 

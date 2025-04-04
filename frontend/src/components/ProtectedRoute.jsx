@@ -1,6 +1,6 @@
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { Navigate } from "react-router-dom";
-
+import { toast } from "sonner";
 
 const getAuthData = () => {
   // Parse cookies into an object
@@ -9,38 +9,31 @@ const getAuthData = () => {
     acc[key] = value;
     return acc;
   }, {});
-
   const token = cookies.token || null;
-  let role = null;
+  let role = cookies.role || null;
 
   if (token) {
     try {
       const decoded = jwtDecode(token);
-      role = decoded.role;
     } catch (error) {
       console.error("Error decoding token:", error);
     }
   }
-
   return {
     token,
     role,
   };
 };
 
-  // ProtectedRoute with role-based access
-  const ProtectedRoute = ({ element, allowedRole }) => {
-    const { token, role } = getAuthData();
-    console.log("Tokennnn:"+token)
-
-  console.log("User Role:", role); // Debugging
-
+// ProtectedRoute with role-based access
+const ProtectedRoute = ({ element, allowedRole }) => {
+  const { token, role } = getAuthData();
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
   if (allowedRole && role !== allowedRole) {
-    alert("Access Denied! Required: " + allowedRole + ", Found: " + role);
+    toast.error("Access Denied!");
     return <Navigate to="/login" replace />;
   }
 

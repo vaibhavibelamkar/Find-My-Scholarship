@@ -144,9 +144,10 @@ export const checkEligibility = async (req, res) => {
 
 export const getProfile = async (req, res) => {
   const token = req.body.token; // Changed from req.headers.authorization
-
   if (!token) {
-    return res.status(401).json({ message: "No token provided", success: false });
+    return res
+      .status(401)
+      .json({ message: "No token provided", success: false });
   }
   let decoded;
   try {

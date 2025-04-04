@@ -3,6 +3,8 @@ import { GraduationCap, User, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
+import { toast } from "sonner";
+import axios from "axios";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -31,10 +33,21 @@ const Navbar = () => {
     }
   }, []);
 
-  const logoutHandler = () => {
-    document.cookie = "token=; role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  const logoutHandler = async () => {
+    const response = await axios.get(`http://localhost:8080/api/auth/logout`, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.data?.success) {
+      toast.success(response.data.message);
+      navigate("/login");
+    } else {
+      toast.error(response.data.message);
+    }
     setUser(null);
-    navigate("/login");
   };
 
   return (

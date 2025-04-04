@@ -6,8 +6,8 @@ import { generateToken } from "../utils/generateToken.js";
 
 export const register = async (req, res) => {
   try {
-    const { email, password, username, role = "user"  } = req.body;
-    if (!email || !password || !username) {
+    const { email, password, username, role } = req.body;
+    if (!email || !password || !username || !role) {
       return res.status(400).json({
         success: false,
         message: "All fields are required.",
@@ -63,13 +63,37 @@ export const login = async (req, res) => {
         message: "Incorrect password or email.",
       });
     }
-    generateToken(res, user, `Welcome ${user.role === "admin" ? "Admin" : "User"}!`);
+    generateToken(
+      res,
+      user,
+      `Welcome ${user.role === "admin" ? "Admin" : "User"}!`
+    );
   } catch (error) {
     console.log(error);
     return res.status(400).json({
       success: false,
       message: "Failed to login.",
     });
+  }
+};
+
+export const logout = (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    });
+    res.clearCookie("role", { httpOnly: true, secure: true, sameSite: "None" });
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Logout Error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error during logout" });
   }
 };
 

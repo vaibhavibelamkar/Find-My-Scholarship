@@ -33,11 +33,6 @@ app.use("/api/admin", adminRoute);
 app.use("/api/scholarships", schemeRoute);
 app.use("/api/announcements", announcementRoute);
 
-// app.use("/api/v1/course", courseRoute);
-// app.use("/api/v1/media", mediaRoute);
-// app.use("/api/v1/purchase", purchaseRoute);
-// app.use("/api/v1/progress", courseProgressRoute);
-
 app.listen(PORT, () => {
   console.log(`Server listen at port ${PORT}`);
 });
