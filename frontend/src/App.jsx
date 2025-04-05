@@ -9,6 +9,7 @@ import Scheme from "./pages/user/Scheme";
 import ScholarshipForm from "./pages/user/ScholarshipForm";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
+import { AuthProvider } from "./context/AuthContext";
 
 const appRouter = createBrowserRouter([
   {
@@ -54,7 +55,7 @@ const appRouter = createBrowserRouter([
     element: (
       <>
         <Navbar />
-        <ProtectedRoute element={<Scheme />} allowedRole="user" />
+        <Scheme />
       </>
     ),
   },
@@ -82,9 +83,11 @@ const appRouter = createBrowserRouter([
 
 function App() {
   return (
-    <main className="min-h-screen bg-gray-50">
-      <RouterProvider router={appRouter} />
-    </main>
+    <AuthProvider>
+      <main className="min-h-screen bg-gray-50">
+        <RouterProvider router={appRouter} />
+      </main>
+    </AuthProvider>
   );
 }
 

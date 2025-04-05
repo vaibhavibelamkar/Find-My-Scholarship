@@ -7,38 +7,11 @@ import {
   DollarSign,
   Building2,
   CheckCircle,
+  Edit,
+  Trash2,
 } from "lucide-react";
-
-const scholarships = [
-  {
-    id: 1,
-    name: "Prime Minister's Scholarship Scheme",
-    provider: "Ministry of Education",
-    amount: 75000,
-    deadline: "2024-05-15",
-    type: "Central Ministry",
-    gender: "All",
-    category: "General",
-    eligibility: [
-      "Engineering students",
-      "CGPA > 8.5",
-      "Family income < 8L/year",
-    ],
-    applicationUrl: "https://mahadbtmahait.gov.in/",
-  },
-  {
-    id: 2,
-    name: "State Merit Scholarship",
-    provider: "State Ministry",
-    amount: 50000,
-    deadline: "2024-06-30",
-    type: "State Ministry",
-    gender: "All",
-    category: "OBC",
-    eligibility: ["First-year students", "State resident", "Merit-based"],
-    applicationUrl: "https://mahadbtmahait.gov.in/",
-  },
-];
+import axios from "axios";
+import { toast } from "sonner";
 
 function Scheme() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,17 +20,33 @@ function Scheme() {
     category: "all",
     gender: "all",
   });
+  const [scholarships, setScholarships] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Scroll to top when the component loads
   useEffect(() => {
     window.scrollTo(0, 0);
+    fetchScholarships();
   }, []);
+
+  const fetchScholarships = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/scholarships/all");
+      if (response.data?.success) {
+        setScholarships(response.data.data);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch scholarships");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredScholarships = scholarships.filter((scholarship) => {
     return (
-      scholarship.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      scholarship.schemeName.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (filters.gender === "all" || scholarship.gender === filters.gender) &&
-      (filters.category === "all" || scholarship.category === filters.category)
+      (filters.category === "all" || scholarship.casteCategory === filters.category)
     );
   });
 
@@ -127,57 +116,60 @@ function Scheme() {
         {/* Scholarship Cards */}
         <div className="overflow-y-auto max-h-[calc(100vh-180px)] px-1">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredScholarships.map((scholarship) => (
-              <div
-                key={scholarship.id}
-                className="bg-white rounded-lg shadow-sm p-3 text-sm"
-              >
-                <h2 className="text-base font-semibold w-full">
-                  {scholarship.name}
-                </h2>
-                <p className="text-gray-600 flex items-center">
-                  <Building2 className="h-4 w-4 mr-2" />
-                  {scholarship.provider}
-                </p>
-                <p className="text-gray-600 flex items-center">
-                  <DollarSign className="h-4 w-4 mr-2" />₹{scholarship.amount}
-                </p>
-                <p className="text-gray-600 flex items-center">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Deadline: {scholarship.deadline}
-                </p>
-
-                {/* Eligibility List */}
-                <div className="mt-2">
-                  <h3 className="font-semibold flex items-center">
-                    <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                    Eligibility:
-                  </h3>
-                  <ul className="list-disc list-inside text-gray-600">
-                    {scholarship.eligibility.map((criteria, index) => (
-                      <li key={index} className="flex items-center">
-                        <CheckCircle className="h-3.5 w-3.5 mr-2 text-blue-500" />
-                        {criteria}
-                      </li>
-                    ))}
-                  </ul>
+            {loading ? (
+              <div className="col-span-full text-center py-8">Loading scholarships...</div>
+            ) : filteredScholarships.length > 0 ? (
+              filteredScholarships.map((scholarship) => (
+                <div
+                  key={scholarship._id}
+                  className="bg-white p-4 rounded-lg shadow-sm border border-gray-400 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">
+                        {scholarship.schemeName}
+                      </h3>
+                      <p className="text-gray-600 mt-1">
+                        Benefits: {scholarship.benefits}
+                      </p>
+                      <p className="text-gray-600">
+                        Caste: {scholarship.casteCategory}
+                      </p>
+                      <p className="text-gray-600">
+                        State: {scholarship.state}
+                      </p>
+                      <p className="text-gray-600">
+                        Gender: {scholarship.gender}
+                      </p>
+                      <p className="text-gray-600">
+                        Area: {scholarship.areaOfResidence}
+                      </p>
+                      <p className="text-gray-600">
+                        Income: {scholarship.annualIncome}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={() => window.open(scholarship.siteLink, "_blank")}
+                      className="px-4 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90"
+                    >
+                      View Details
+                    </button>
+                    <button
+                      onClick={() => window.open(scholarship.schemeDocuments, "_blank")}
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      View Documents
+                    </button>
+                  </div>
                 </div>
-
-                {/* Buttons */}
-                <div className="flex gap-2 mt-3">
-                  <a
-                    href={scholarship.applicationUrl}
-                    className="flex-1 bg-[#001a33] text-white px-3 py-1.5 rounded-lg hover:bg-opacity-90 flex items-center justify-center gap-1"
-                  >
-                    Apply Now
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                  <button className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg">
-                    <Share2 className="h-4 w-4" />
-                  </button>
-                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8 text-gray-500">
+                No scholarships found matching your criteria
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

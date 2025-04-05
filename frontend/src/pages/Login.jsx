@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState("login");
@@ -31,6 +32,7 @@ const Login = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetEmailError, setResetEmailError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { updateUserState } = useAuth();
 
   const validateSignupForm = () => {
     const errors = {
@@ -97,6 +99,7 @@ const Login = () => {
           setActiveTab("login");
         } else {
           toast.success(response.data.message || "Login successful!");
+          updateUserState();
 
           const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
             const [key, value] = cookie.split("=");

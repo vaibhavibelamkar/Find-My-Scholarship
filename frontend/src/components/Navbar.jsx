@@ -1,37 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { GraduationCap, User, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
-  const [user, setUser] = useState(null);
+  const { user, updateUserState } = useAuth();
   const navigate = useNavigate();
-
-  const getCookie = (name) => {
-    const cookies = document.cookie.split("; ");
-    console.log(cookies);
-    for (let cookie of cookies) {
-      const [key, value] = cookie.split("=");
-      if (key === name) return value;
-    }
-    return null;
-  };
-
-  useEffect(() => {
-    const token = getCookie("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setUser({ name: decoded.name });
-      } catch (error) {
-        console.error("Invalid token", error);
-        setUser(null);
-      }
-    }
-  }, []);
 
   const logoutHandler = async () => {
     const response = await axios.get(`http://localhost:8080/api/auth/logout`, {
@@ -43,11 +20,11 @@ const Navbar = () => {
 
     if (response.data?.success) {
       toast.success(response.data.message);
+      updateUserState(); // Update auth state after logout
       navigate("/login");
     } else {
       toast.error(response.data.message);
     }
-    setUser(null);
   };
 
   return (

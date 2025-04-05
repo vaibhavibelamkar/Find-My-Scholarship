@@ -35,8 +35,14 @@ const StudentsTable = ({ setActiveSection }) => {
       setLoading(true);
       const token = getCookie("token");
       const response = await axios.get(
-        `http://localhost:8080/api/admin/students?search=${searchTerm}&status=${statusFilter}&page=${pagination.page}`,
+        `http://localhost:8080/api/admin/students`,
         {
+          params: {
+            search: searchTerm,
+            status: statusFilter,
+            page: pagination.page,
+            limit: 10
+          },
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -57,18 +63,32 @@ const StudentsTable = ({ setActiveSection }) => {
     }
   };
 
+  // Handle search input change with debounce
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setShowSuggestions(value.length > 0);
+    
+    // Clear suggestions if search term is empty
+    if (value.length === 0) {
+      setSuggestions([]);
+      fetchStudents();
+    } else {
+      fetchSuggestions(value);
+    }
+  };
+
   // Fetch suggestions based on search term
   const fetchSuggestions = async (term) => {
-    if (term.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-
     try {
       const token = getCookie("token");
       const response = await axios.get(
-        `http://localhost:8080/api/admin/students?search=${term}&limit=5`,
+        `http://localhost:8080/api/admin/students`,
         {
+          params: {
+            search: term,
+            limit: 5
+          },
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -83,17 +103,9 @@ const StudentsTable = ({ setActiveSection }) => {
     }
   };
 
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    fetchSuggestions(value);
-    setShowSuggestions(true);
-  };
-
   // Handle suggestion click
   const handleSuggestionClick = (suggestion) => {
-    setSearchTerm(suggestion.fullName);
+    setSearchTerm(suggestion.fullName || suggestion.email);
     setShowSuggestions(false);
     fetchStudents();
   };
@@ -191,11 +203,21 @@ const StudentsTable = ({ setActiveSection }) => {
         <div className="relative">
           <input
             type="text"
-            placeholder="Search students..."
-            className="pl-10 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
+            placeholder="Search by name or email..."
+            className="pl-10 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 w-64"
             value={searchTerm}
-            onChange={handleSearchChange}
-            onFocus={() => setShowSuggestions(true)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearchTerm(value);
+              setShowSuggestions(value.length > 0);
+              if (value.length === 0) {
+                setSuggestions([]);
+                fetchStudents();
+              } else {
+                fetchSuggestions(value);
+              }
+            }}
+            onFocus={() => searchTerm.length > 0 && setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
           />
           <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
@@ -207,12 +229,14 @@ const StudentsTable = ({ setActiveSection }) => {
                 <div
                   key={suggestion._id}
                   className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => handleSuggestionClick(suggestion)}
+                  onClick={() => {
+                    setSearchTerm(suggestion.fullName || suggestion.email);
+                    setShowSuggestions(false);
+                    fetchStudents();
+                  }}
                 >
                   <div className="font-medium">{suggestion.fullName}</div>
-                  <div className="text-sm text-gray-500">
-                    {suggestion.email}
-                  </div>
+                  <div className="text-sm text-gray-500">{suggestion.email}</div>
                 </div>
               ))}
             </div>
@@ -221,7 +245,10 @@ const StudentsTable = ({ setActiveSection }) => {
         <select
           className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
           value={statusFilter}
-          onChange={handleStatusFilterChange}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPagination({ ...pagination, page: 1 });
+          }}
         >
           <option value="all">All Status</option>
           <option value="verified">Verified</option>

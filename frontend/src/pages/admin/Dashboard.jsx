@@ -44,6 +44,7 @@ const students = [
 ];
 
 function Dashboard() {
+  const [userData, setUserData] = useState(null);
   const [activeSection, setActiveSection] = useState("dashboard");
   const [schemes, setSchemes] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -96,8 +97,44 @@ function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-
+  const getCookie = (name) => {
+    const cookies = document.cookie.split("; ");
+    for (let cookie of cookies) {
+      const [key, value] = cookie.split("=");
+      if (key === name) return value;
+    }
+    return null;
+  };
   useEffect(() => {
+    const fetchProfile = async () => {
+      const token = getCookie("token");
+      if (!token) {
+        toast.error("token not found");
+      }
+      try {
+        const response = await axios.post(
+          `http://localhost:8080/api/admin/profile`,
+          { token },
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log(response.data);
+        if (response.data?.success && response.data?.data) {
+          setUserData(response.data.data); // ✅ Set only the user data object
+        } else {
+          toast.error("Failed to fetch user data");
+        }
+      } catch (error) {
+        toast.error(error);
+      }
+    };
+
+    fetchProfile();
+
     const fetchScholarships = async () => {
       try {
         const API_BASE_URL = "http://localhost:8080/api/scholarships/all";
@@ -1640,6 +1677,27 @@ function Dashboard() {
       <div className="w-64 bg-white shadow-lg fixed left-0 top-16 h-[calc(100vh-4rem)]">
         <nav className="mt-8">
           <div className="px-4 space-y-2">
+          <div className="mt-5 mr-10 p-4 bg-white rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-100 shadow-md flex-shrink-0">
+              <img
+                src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
+                alt="Profile"
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-700 truncate">
+                {userData ? userData.username : ""}
+              </p>
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <span className="truncate">
+                  {userData ? userData.email : ""}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
             <button
               onClick={() => setActiveSection("dashboard")}
               className={`w-full flex items-center gap-2 p-2 rounded-lg ${
