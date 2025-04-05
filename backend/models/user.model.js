@@ -89,7 +89,7 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
   },
-  { timestamp: true }
+  { timestamps: true }
 );
 
 export const User = mongoose.model("User", userSchema);

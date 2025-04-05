@@ -78,6 +78,23 @@ function Dashboard() {
   const [showAnswerModal, setShowAnswerModal] = useState(false);
   const [showDeleteQuestionModal, setShowDeleteQuestionModal] = useState(false);
   const [answer, setAnswer] = useState("");
+
+  // Admin settings state
+  const [adminProfile, setAdminProfile] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+  });
+  const [adminSettings, setAdminSettings] = useState({
+    emailNotifications: true,
+    notifications: {
+      userQueries: true,
+      newUsers: true,
+      eligibilityChecks: true,
+    },
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -137,6 +154,153 @@ function Dashboard() {
 
     fetchUserQuestions();
   }, [navigate]);
+
+  // Fetch admin profile and settings
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        setIsLoading(true);
+        const token = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("token="))
+          ?.split("=")[1];
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+        // Fetch admin profile
+        const profileResponse = await axios.post(
+          "http://localhost:8080/api/admin/profile",
+          { token },
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (profileResponse.data?.success) {
+          setAdminProfile({
+            fullName: profileResponse.data.data.fullName || "",
+            email: profileResponse.data.data.email || "",
+            phoneNumber: profileResponse.data.data.mobileNumber || "",
+          });
+        }
+
+        // Fetch admin settings
+        const settingsResponse = await axios.get(
+          "http://localhost:8080/api/admin/settings",
+          { token },
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (settingsResponse.data?.success) {
+          setAdminSettings(settingsResponse.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching admin data:", error);
+        toast.error("Failed to load admin data" + error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (activeSection === "settings") {
+      fetchAdminData();
+    }
+  }, [activeSection, navigate]);
+
+  // Handle admin profile input change
+  const handleAdminProfileChange = (e) => {
+    const { name, value } = e.target;
+    setAdminProfile((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle admin settings input change
+  const handleAdminSettingsChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    if (name.startsWith("notifications.")) {
+      const notificationType = name.split(".")[1];
+      setAdminSettings((prev) => ({
+        ...prev,
+        notifications: {
+          ...prev.notifications,
+          [notificationType]: type === "checkbox" ? checked : value,
+        },
+      }));
+    } else {
+      setAdminSettings((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      }));
+    }
+  };
+
+  // Save admin profile and settings
+  const handleSaveAdminChanges = async () => {
+    try {
+      setIsLoading(true);
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      // Update admin profile
+      await axios.put(
+        "http://localhost:8080/api/admin/profile",
+        {
+          token,
+          fullName: adminProfile.fullName,
+          email: adminProfile.email,
+          mobileNumber: adminProfile.phoneNumber,
+        },
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Update admin settings
+      await axios.put(
+        "http://localhost:8080/api/admin/settings",
+        {
+          emailNotifications: adminSettings.emailNotifications,
+          notifications: adminSettings.notifications,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast.success("Settings updated successfully");
+    } catch (error) {
+      console.error("Error updating admin settings:", error);
+      toast.error("Failed to update settings");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -723,17 +887,24 @@ function Dashboard() {
   );
 
   const renderDashboardContent = () => {
+    if (activeSection === "students") {
+      return <StudentsTable setActiveSection={setActiveSection} />;
+    }
     switch (activeSection) {
       case "editSchemes":
         return renderScholarshipManager();
-
-      case "students":
-        return <StudentsTable students={students} />;
 
       case "announcements":
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center mb-6">
+              <button
+                onClick={() => setActiveSection("dashboard")}
+                className="flex items-center gap-2 text-[#002b4d] hover:text-[#004d80] mb-2 w-max"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Dashboard
+              </button>
               <h2 className="text-2xl font-semibold">Announcements</h2>
               <button
                 onClick={() => setShowAnnouncementModal(true)}
@@ -981,135 +1152,186 @@ function Dashboard() {
       case "settings":
         return (
           <div className="space-y-6">
+            <button
+              onClick={() => setActiveSection("dashboard")}
+              className="flex items-center gap-2 text-[#002b4d] hover:text-[#004d80] mb-2 w-max"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Dashboard
+            </button>
             <h2 className="text-2xl font-semibold mb-6">Settings</h2>
 
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-6 border-b">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
-                    <User className="w-10 h-10 text-gray-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">Admin Profile</h3>
-                    <p className="text-gray-500">
-                      Manage your account settings and preferences
-                    </p>
-                  </div>
-                </div>
-
-                <form className="space-y-6 max-w-2xl">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        First Name
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        defaultValue="John"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Last Name
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        defaultValue="Doe"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                      defaultValue="admin@example.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                      defaultValue="+1 (555) 123-4567"
-                    />
-                  </div>
-                </form>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#002b4d]"></div>
               </div>
-
-              <div className="p-6 border-b">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <BellIcon className="w-6 h-6 text-[#001a33]" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">Notifications</h3>
-                    <p className="text-gray-500">
-                      Configure how you receive notifications
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Receive User Queries</h4>
-                      <p className="text-sm text-gray-500">
-                        Receive notifications via email
-                      </p>
+            ) : (
+              <>
+                <div className="bg-white rounded-lg shadow-sm">
+                  <div className="p-6 border-b">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
+                        <User className="w-10 h-10 text-gray-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold">Admin Profile</h3>
+                        <p className="text-gray-500">
+                          Manage your account settings and preferences
+                        </p>
+                      </div>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        defaultChecked
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-text-[#001a33] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-text-[#001a33]"></div>
-                    </label>
+
+                    <form className="space-y-6 max-w-2xl">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Full Name
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            value={adminProfile.fullName}
+                            onChange={handleAdminProfileChange}
+                            name="fullName"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          value={adminProfile.email}
+                          onChange={handleAdminProfileChange}
+                          name="email"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone Number
+                        </label>
+                        <input
+                          type="tel"
+                          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          value={adminProfile.phoneNumber}
+                          onChange={handleAdminProfileChange}
+                          name="phoneNumber"
+                        />
+                      </div>
+                    </form>
+                  </div>
+
+                  <div className="p-6 border-b">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <BellIcon className="w-6 h-6 text-[#001a33]" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold">Notifications</h3>
+                        <p className="text-gray-500">
+                          Configure how you receive notifications
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">Email Notifications</h4>
+                          <p className="text-sm text-gray-500">
+                            Enable or disable all email notifications
+                          </p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={adminSettings.emailNotifications}
+                            onChange={handleAdminSettingsChange}
+                            name="emailNotifications"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-text-[#001a33] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-text-[#001a33]"></div>
+                        </label>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">User Queries</h4>
+                          <p className="text-sm text-gray-500">
+                            Receive notifications for new user questions
+                          </p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={adminSettings.notifications.userQueries}
+                            onChange={handleAdminSettingsChange}
+                            name="notifications.userQueries"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-text-[#001a33] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-text-[#001a33]"></div>
+                        </label>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">New Users</h4>
+                          <p className="text-sm text-gray-500">
+                            Receive notifications for new user registrations
+                          </p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={adminSettings.notifications.newUsers}
+                            onChange={handleAdminSettingsChange}
+                            name="notifications.newUsers"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-text-[#001a33] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-text-[#001a33]"></div>
+                        </label>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">Eligibility Checks</h4>
+                          <p className="text-sm text-gray-500">
+                            Receive notifications for eligibility checks
+                          </p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={
+                              adminSettings.notifications.eligibilityChecks
+                            }
+                            onChange={handleAdminSettingsChange}
+                            name="notifications.eligibilityChecks"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-text-[#001a33] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-text-[#001a33]"></div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end mt-6">
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 bg-[#002b4d] text-white rounded-lg hover:bg-[#004d80]"
+                      onClick={handleSaveAdminChanges}
+                      disabled={isLoading}
+                    >
+                      <Save className="w-5 h-5" />
+                      {isLoading ? "Saving..." : "Save Changes"}
+                    </button>
                   </div>
                 </div>
-              </div>
-
-              <div className="p-6">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-[#001a33]" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">Security</h3>
-                    <p className="text-gray-500">
-                      Manage your security preferences
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
-                    <Key className="w-5 h-5" />
-                    Change Password
-                  </button>
-                  <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
-                    <Shield className="w-5 h-5" />
-                    Two-Factor Authentication
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end mt-6">
-              <button className="flex items-center gap-2 px-4 py-2 bg-[#002b4d] text-white rounded-lg hover:bg-[#004d80]">
-                <Save className="w-5 h-5" />
-                Save Changes
-              </button>
-            </div>
+              </>
+            )}
           </div>
         );
 

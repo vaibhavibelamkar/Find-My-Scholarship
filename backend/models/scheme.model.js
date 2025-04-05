@@ -43,7 +43,7 @@ const schemeSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamp: true }
+  { timestamps: true }
 );
 
 export const Scheme = mongoose.model("Scheme", schemeSchema);

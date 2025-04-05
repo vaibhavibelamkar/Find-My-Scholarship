@@ -2,6 +2,8 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { Scheme } from "../models/scheme.model.js";
 import { Question } from "../models/question.model.js";
+import { AdminSettings } from "../models/adminSettings.model.js";
+import { sendAdminNotification } from "../utils/email.js";
 
 export const checkEligibility = async (req, res) => {
   try {
@@ -210,6 +212,34 @@ export const sendQuestion = async (req, res) => {
     });
 
     await newQuestion.save();
+
+    // Check admin settings for email notifications
+    const adminSettings = await AdminSettings.findOne({});
+
+    if (
+      adminSettings &&
+      adminSettings.emailNotifications &&
+      adminSettings.notifications.userQueries
+    ) {
+      // Find admin user to get email
+      const admin = await User.findOne({ role: "admin" });
+
+      if (admin && admin.email) {
+        // Send email notification to admin
+        const subject = "New User Question";
+        const content = `
+          <p><strong>User:</strong> ${user.fullName || user.username}</p>
+          <p><strong>Email:</strong> ${user.email}</p>
+          <p><strong>Question:</strong> ${question}</p>
+          <p><a href="${
+            process.env.FRONTEND_URL
+          }/admin/dashboard?section=questions" style="display: inline-block; background-color: #002b4d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 10px;">View Question</a></p>
+        `;
+
+        await sendAdminNotification(admin.email, subject, content);
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: "Question submitted successfully",

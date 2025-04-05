@@ -1,6 +1,11 @@
 import { Announcement } from "../models/announcement.model.js";
 import { Question } from "../models/question.model.js";
 import { Scheme } from "../models/scheme.model.js";
+import { User } from "../models/user.model.js";
+import { AdminSettings } from "../models/adminSettings.model.js";
+import { sendEmail } from "../utils/email.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 export const addScheme = async (req, res) => {
   try {
@@ -104,7 +109,6 @@ export const getAllQuestions = async (req, res) => {
   }
 };
 
-// Answer a question
 export const answerQuestion = async (req, res) => {
   try {
     const { answer, status } = req.body;
@@ -134,7 +138,6 @@ export const answerQuestion = async (req, res) => {
   }
 };
 
-// Delete a question
 export const deleteQuestion = async (req, res) => {
   try {
     const question = await Question.findByIdAndDelete(req.params.id);
@@ -156,5 +159,260 @@ export const deleteQuestion = async (req, res) => {
       message: "Error deleting question",
       error: error.message,
     });
+  }
+};
+
+export const getAllStudents = async (req, res) => {
+  try {
+    const { search, status, page = 1, limit = 10 } = req.query;
+
+    // Build query
+    let query = { role: "user" };
+
+    // Add search functionality
+    if (search) {
+      query.$or = [
+        { fullName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { collegeName: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Add status filter if provided
+    if (status && status !== "all") {
+      query.status = status;
+    }
+
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+
+    // Execute query with pagination
+    const students = await User.find(query)
+      .select("-password")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Get total count for pagination
+    const total = await User.countDocuments(query);
+
+    return res.status(200).json({
+      success: true,
+      data: students,
+      pagination: {
+        total,
+        page: parseInt(page),
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching students",
+      error: error.message,
+    });
+  }
+};
+
+export const verifyStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const student = await User.findByIdAndUpdate(
+      id,
+      { status: "verified" },
+      { new: true }
+    );
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Student verified successfully",
+      data: student,
+    });
+  } catch (error) {
+    console.error("Error verifying student:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error verifying student",
+      error: error.message,
+    });
+  }
+};
+
+export const deleteStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const student = await User.findByIdAndDelete(id);
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Student deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting student:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error deleting student",
+      error: error.message,
+    });
+  }
+};
+
+export const getAdminProfile = async (req, res) => {
+  try {
+    const token = req.body.token;
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    const admin = await User.findById(decoded.userId).select("-password");
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+    res.status(200).json({ success: true, data: admin });
+  } catch (error) {
+    console.error("Error getting admin profile:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
+};
+
+// Update admin profile
+export const updateAdminProfile = async (req, res) => {
+  try {
+    const { token, fullName, email, mobileNumber } = req.body;
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    // Get the user ID from the authenticated request
+    const userId = decoded.userId;
+
+    // Find the admin user
+    const admin = await User.findById(userId);
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // Update basic info
+    if (fullName) admin.fullName = fullName;
+    if (email) admin.email = email;
+    if (mobileNumber) admin.mobileNumber = mobileNumber;
+
+    await admin.save();
+
+    // Get updated admin without password
+    const updatedAdmin = await User.findById(admin._id).select("-password");
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedAdmin,
+    });
+  } catch (error) {
+    console.error("Error updating admin profile:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
+};
+
+export const getAdminSettings = async (req, res) => {
+  try {
+    let settings = await AdminSettings.findOne({});
+
+    // If no settings exist, create default settings
+    if (!settings) {
+      settings = await AdminSettings.create({
+        emailSettings: {
+          emailUser: process.env.EMAIL_USER,
+          emailPassword: process.env.EMAIL_PASSWORD,
+        },
+      });
+    }
+
+    res.status(200).json({ success: true, data: settings });
+  } catch (error) {
+    console.error("Error getting admin settings:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
+};
+
+export const updateAdminSettings = async (req, res) => {
+  try {
+    const { emailNotifications, notifications } = req.body;
+
+    let settings = await AdminSettings.findOne({});
+
+    if (!settings) {
+      settings = new AdminSettings();
+    }
+
+    // Update settings
+    if (emailNotifications !== undefined) {
+      settings.emailNotifications = emailNotifications;
+    }
+
+    if (notifications) {
+      settings.notifications = {
+        ...settings.notifications,
+        ...notifications,
+      };
+    }
+
+    await settings.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Settings updated successfully",
+      data: settings,
+    });
+  } catch (error) {
+    console.error("Error updating admin settings:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
+};
+
+export const addOrUpdateSettings = async (req, res) => {
+  try {
+    const { emailNotifications, notifications } = req.body;
+
+    // Optional: if you want to uniquely identify admin settings, use an adminId or similar
+    // For now, we'll assume only one admin settings document exists
+
+    let settings = await AdminSettings.findOne();
+
+    if (settings) {
+      // Update existing
+      settings.emailNotifications =
+        emailNotifications ?? settings.emailNotifications;
+      settings.notifications = {
+        ...settings.notifications,
+        ...notifications,
+      };
+      await settings.save();
+      return res
+        .status(200)
+        .json({ success: true, message: "Settings updated", data: settings });
+    } else {
+      // Create new
+      settings = await AdminSettings.create({
+        emailNotifications,
+        notifications,
+      });
+      return res
+        .status(201)
+        .json({ success: true, message: "Settings created", data: settings });
+    }
+  } catch (error) {
+    console.error("Error saving admin settings:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
