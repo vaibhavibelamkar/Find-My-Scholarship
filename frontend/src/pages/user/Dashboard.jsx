@@ -52,7 +52,11 @@ const indianStates = [
   "Uttar Pradesh",
   "Uttarakhand",
   "West Bengal",
+  "Delhi"
 ];
+
+// Add this constant at the top with other constants
+const CASTES = ["SC", "SBC", "OBC", "VJ/NT", "EWS", "Other"];
 
 function Dashboard() {
   const [userData, setUserData] = useState();
@@ -60,9 +64,11 @@ function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const [showCasteDropdown, setShowCasteDropdown] = useState(false);
   const [selectedState, setSelectedState] = useState("");
   const [announcementData, setAnnouncementData] = useState([]);
   const [userQuestions, setUserQuestions] = useState([]);
+  const [selectedCaste, setSelectedCaste] = useState("");
 
   const getCookie = (name) => {
     const cookies = document.cookie.split("; ");
@@ -171,7 +177,21 @@ function Dashboard() {
   const [question, setQuestion] = useState("");
   const [showThankYou, setShowThankYou] = useState(false);
 
-  // Filter scholarships based on search query and active filter
+  // Update handleStateSelect to work with existing "All States" option
+  const handleStateSelect = (state) => {
+    setSelectedState(state === "All States" ? "" : state);
+    setActiveFilter(state === "All States" ? "" : "state");
+    setShowStateDropdown(false);
+  };
+
+  // Update handleCasteSelect to work with "All" option
+  const handleCasteSelect = (caste) => {
+    setSelectedCaste(caste === "All" ? "" : caste);
+    setActiveFilter(caste === "All" ? "" : "caste");
+    setShowCasteDropdown(false);
+  };
+
+  // Update the filteredScholarships logic
   const filteredScholarships = React.useMemo(() => {
     let filtered = [...scholarships];
 
@@ -186,27 +206,22 @@ function Dashboard() {
       );
     }
 
-    // Apply state filter
-    if (selectedState) {
+    // Apply state filter only if a specific state is selected
+    if (selectedState && selectedState !== "All States") {
       filtered = filtered.filter(
         (scholarship) => scholarship.state === selectedState
       );
     }
 
-    // Apply category filter
-    if (activeFilter !== "all" && activeFilter !== "state") {
-      filtered = filtered.filter((scholarship) => {
-        switch (activeFilter) {
-          case "caste":
-            return scholarship.caste;
-          default:
-            return true;
-        }
-      });
+    // Apply caste filter only if a specific caste is selected
+    if (selectedCaste && selectedCaste !== "All") {
+      filtered = filtered.filter(
+        (scholarship) => scholarship.casteCategory === selectedCaste
+      );
     }
 
     return filtered;
-  }, [scholarships, searchQuery, activeFilter, selectedState]);
+  }, [scholarships, searchQuery, selectedState, selectedCaste]);
 
   // Toggle Favorite Function
   const toggleFavorite = (id) => {
@@ -260,11 +275,21 @@ function Dashboard() {
     ? favoriteScholarships
     : filteredScholarships;
 
-  const handleStateSelect = (state) => {
-    setSelectedState(state);
-    setActiveFilter("state");
-    setShowStateDropdown(false);
-  };
+  // Add a click outside handler to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.filter-dropdown')) {
+        setShowStateDropdown(false);
+        setShowCasteDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const [answeredQueries, setAnsweredQueries] = useState([
     {
       id: 1,
@@ -296,7 +321,7 @@ function Dashboard() {
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-100 shadow-md flex-shrink-0">
               <img
-                src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
+                src="https://tse3.mm.bing.net/th?id=OIP.AqawFWItKsHCv07tcN8kQgHaHa&pid=Api&P=0&h=220"
                 alt="Profile"
                 className="w-full h-full object-cover rounded-full"
               />
@@ -336,54 +361,97 @@ function Dashboard() {
               >
                 All
               </button>
-              <div
-                className="relative"
-                onMouseEnter={() => setShowStateDropdown(true)}
-                onMouseLeave={() => setShowStateDropdown(false)}
-              >
-                <button
-                  className={`w-full text-left p-1 rounded flex items-center justify-between ${
-                    activeFilter === "state"
-                      ? "text-[#001a33]"
-                      : "text-gray-400"
-                  }`}
-                >
-                  <span>
-                    {selectedState ? `State: ${selectedState}` : "State"}
-                  </span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-                {showStateDropdown && (
-                  <div className="absolute left-full top-0 ml-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                    <div className="max-h-64 overflow-y-auto">
-                      {indianStates.map((state) => (
+              <div className="flex space-x-2 mb-4">
+                <div className="relative filter-dropdown">
+                  <button
+                    className={`w-full text-left p-1 rounded flex items-center justify-between ${
+                      activeFilter === "state" ? "text-[#001a33]" : "text-gray-400"
+                    }`}
+                    onClick={() => {
+                      setShowStateDropdown(!showStateDropdown);
+                      setShowCasteDropdown(false);
+                    }}
+                  >
+                    <span>
+                      {selectedState ? `State: ${selectedState}` : "State"}
+                    </span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                  {showStateDropdown && (
+                    <div className="absolute left-full top-0 ml-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      <div className="max-h-64 overflow-y-auto">
                         <button
-                          key={state}
+                          key="all-states"
                           className={`w-full text-left px-4 py-2 hover:bg-gray-50 ${
-                            selectedState === state
+                            !selectedState || selectedState === "All States"
                               ? "text-[#001a33] font-medium"
                               : "text-gray-600"
                           }`}
-                          onClick={() => handleStateSelect(state)}
+                          onClick={() => handleStateSelect("All States")}
                         >
-                          {state}
+                          All States
                         </button>
-                      ))}
+                        {indianStates.map((state) => (
+                          <button
+                            key={state}
+                            className={`w-full text-left px-4 py-2 hover:bg-gray-50 ${
+                              selectedState === state
+                                ? "text-[#001a33] font-medium"
+                                : "text-gray-600"
+                            }`}
+                            onClick={() => handleStateSelect(state)}
+                          >
+                            {state}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+
+                <div className="relative filter-dropdown">
+                  <button
+                    className={`w-full text-left p-1 rounded flex items-center justify-between ${
+                      activeFilter === "caste" ? "text-[#001a33]" : "text-gray-400"
+                    }`}
+                    onClick={() => {
+                      setShowCasteDropdown(!showCasteDropdown);
+                      setShowStateDropdown(false);
+                    }}
+                  >
+                    <span>{selectedCaste ? `Caste: ${selectedCaste}` : "Caste"}</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                  {showCasteDropdown && (
+                    <div className="absolute left-full top-0 ml-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      <div className="max-h-64 overflow-y-auto">
+                        <button
+                          key="all-castes"
+                          className={`w-full text-left px-4 py-2 hover:bg-gray-50 ${
+                            !selectedCaste ? "text-[#001a33] font-medium" : "text-gray-600"
+                          }`}
+                          onClick={() => handleCasteSelect("All")}
+                        >
+                          All Castes
+                        </button>
+                        {["SC", "SBC", "OBC", "VJ/NT", "EWS", "Other"].map((caste) => (
+                          <button
+                            key={caste}
+                            className={`w-full text-left px-4 py-2 hover:bg-gray-50 ${
+                              selectedCaste === caste
+                                ? "text-[#001a33] font-medium"
+                                : "text-gray-600"
+                            }`}
+                            onClick={() => handleCasteSelect(caste)}
+                          >
+                            {caste}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <button
-                className={`w-full text-left p-1 rounded ${
-                  activeFilter === "caste" ? "text-[#001a33]" : "text-gray-400"
-                }`}
-                onClick={() => {
-                  setActiveFilter("caste");
-                  setSelectedState("");
-                }}
-              >
-                Caste
-              </button>
             </div>
 
             <button
@@ -539,9 +607,7 @@ function Dashboard() {
                   />
                   <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
                 </div>
-                <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-full">
-                  <Bell className="w-6 h-6" />
-                </button>
+            
               </div>
 
               <div className="grid grid-cols-3 gap-4 flex-1">

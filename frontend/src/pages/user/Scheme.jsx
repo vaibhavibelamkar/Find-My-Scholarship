@@ -13,12 +13,17 @@ import {
 import axios from "axios";
 import { toast } from "sonner";
 
+// Add the CASTES constant
+const CASTES = ["All", "SC", "SBC", "OBC", "VJ/NT", "EWS", "Other"];
+
 function Scheme() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
     deadline: "all",
     category: "all",
     gender: "all",
+    state: "All States", // Add state filter
+    caste: "All" // Add caste filter
   });
   const [scholarships, setScholarships] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,12 +47,29 @@ function Scheme() {
     }
   };
 
+  // Update the filteredScholarships logic
   const filteredScholarships = scholarships.filter((scholarship) => {
-    return (
-      scholarship.schemeName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (filters.gender === "all" || scholarship.gender === filters.gender) &&
-      (filters.category === "all" || scholarship.casteCategory === filters.category)
-    );
+    // Search term filter
+    const matchesSearch = scholarship.schemeName
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    // State filter
+    const matchesState = 
+      filters.state === "All States" || 
+      scholarship.state === filters.state;
+
+    // Caste filter
+    const matchesCaste = 
+      filters.caste === "All" || 
+      scholarship.casteCategory === filters.caste;
+
+    // Gender filter
+    const matchesGender = 
+      filters.gender === "all" || 
+      scholarship.gender === filters.gender;
+
+    return matchesSearch && matchesState && matchesCaste && matchesGender;
   });
 
   return (
@@ -72,6 +94,7 @@ function Scheme() {
           <div className="flex flex-wrap gap-4 mt-4">
             <select
               className="bg-gray-100 px-3 py-2 rounded-lg"
+              value={filters.state}
               onChange={(e) =>
                 setFilters({ ...filters, state: e.target.value })
               }
@@ -107,9 +130,22 @@ function Scheme() {
               <option value="West Bengal">West Bengal</option>
             </select>
 
-            <button className="bg-gray-100 px-3 py-2 rounded-lg">
-              Deadline
-            </button>
+            <select
+              className="bg-gray-100 px-3 py-2 rounded-lg"
+              value={filters.caste}
+              onChange={(e) =>
+                setFilters({ ...filters, caste: e.target.value })
+              }
+            >
+              <option value="All">All Castes</option>
+              {CASTES.slice(1).map((caste) => (
+                <option key={caste} value={caste}>
+                  {caste}
+                </option>
+              ))}
+            </select>
+
+            
           </div>
         </div>
 
@@ -166,8 +202,14 @@ function Scheme() {
                 </div>
               ))
             ) : (
-              <div className="col-span-full text-center py-8 text-gray-500">
-                No scholarships found matching your criteria
+              <div className="col-span-full text-center py-8 bg-white rounded-lg border border-gray-400">
+                <Search className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600">
+                  No scholarships found matching your criteria
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Try adjusting your search or filters
+                </p>
               </div>
             )}
           </div>
