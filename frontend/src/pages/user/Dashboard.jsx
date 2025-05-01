@@ -191,19 +191,24 @@ function Dashboard() {
     setShowCasteDropdown(false);
   };
 
-  // Update the filteredScholarships logic
+  // Update the filteredScholarships logic with improved search
   const filteredScholarships = React.useMemo(() => {
     let filtered = [...scholarships];
 
     // Apply search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (scholarship) =>
-          scholarship.schemeName.toLowerCase().includes(query) ||
-          scholarship.state.toLowerCase().includes(query) ||
-          scholarship.benefits.toLowerCase().includes(query)
-      );
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((scholarship) => {
+        const schemeName = (scholarship.schemeName || "").toLowerCase();
+        const state = (scholarship.state || "").toLowerCase();
+        const benefits = (scholarship.benefits || "").toLowerCase();
+        const casteCategory = (scholarship.casteCategory || "").toLowerCase();
+        
+        return schemeName.includes(query) ||
+               state.includes(query) ||
+               benefits.includes(query) ||
+               casteCategory.includes(query);
+      });
     }
 
     // Apply state filter only if a specific state is selected
@@ -328,7 +333,7 @@ function Dashboard() {
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-100 shadow-md flex-shrink-0">
               <img
-                src="https://tse3.mm.bing.net/th?id=OIP.AqawFWItKsHCv07tcN8kQgHaHa&pid=Api&P=0&h=220"
+                src="https://tse3.mm.bing.net/th?id=OIP.https://www.google.com/search?sca_esv=072bf505c6b5844f&sxsrf=AHTn8zq5KcWL0NgV_uX9FsooR5qb0Q_AVQ:1746110639085&q=profile+icon&udm=2&fbs=ABzOT_CWdhQLP1FcmU5B0fn3xuWpA-dk4wpBWOGsoR7DG5zJBpcx8kZB4NRoUjdgt8WwoMuwgcVebmzp5FdJBsH8BgTUuyIEQIiViBx-KnlnfIT13uWK4b_j4sRl4BdB2xZMYbprgqudsq2YfKrQk6Qe0G4qsF-t3FnXU9cIp3M9r6j_5C8w5CzrQ04tzAjU62qfbzyT8UaIwyNfMoA-iRL7Fan7eI-y7w&sa=X&sqi=2&ved=2ahUKEwjZ1IWDwYKNAxU-n68BHU3EH0MQtKgLegQIFhAB&biw=1536&bih=730&dpr=1.25#vhid=kWsq6vAopZPvOM&vssid=mosaic&pid=Api&P=0&h=220"
                 alt="Profile"
                 className="w-full h-full object-cover rounded-full"
               />

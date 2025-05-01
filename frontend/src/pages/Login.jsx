@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Mail, Lock, User, LogIn, UserPlus } from "lucide-react";
+import { Mail, Lock, User, LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -33,6 +33,24 @@ const Login = () => {
   const [resetEmailError, setResetEmailError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { updateUserState } = useAuth();
+
+  // Password visibility states
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleKeyPress = (event, type) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (type === "login") {
+        handleRegistration("login");
+      } else if (type === "signup") {
+        handleRegistration("signup");
+      } else if (type === "reset") {
+        handleResetPassword();
+      }
+    }
+  };
 
   const validateSignupForm = () => {
     const errors = {
@@ -248,7 +266,10 @@ const Login = () => {
 
         {/* Forgot Password Form */}
         {showForgotPassword && (
-          <div className="space-y-6">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleResetPassword();
+          }} className="space-y-6">
             <div className="text-center mb-4">
               <h2 className="text-xl font-semibold text-[#001a33]">
                 Reset Password
@@ -266,7 +287,9 @@ const Login = () => {
                   placeholder="Enter your email"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
+                  onKeyPress={(e) => handleKeyPress(e, "reset")}
                   disabled={isLoading}
+                  autoComplete="email"
                 />
               </div>
               {resetEmailError && (
@@ -275,13 +298,14 @@ const Login = () => {
             </div>
             <div className="space-y-4">
               <button
-                onClick={handleResetPassword}
+                type="submit"
                 className={`${buttonClass} bg-[#001a33] text-white hover:bg-[#002b4d]`}
                 disabled={isLoading}
               >
                 {isLoading ? "Sending..." : "Send Reset Link"}
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setShowForgotPassword(false);
                   setResetEmail("");
@@ -293,12 +317,15 @@ const Login = () => {
                 Back to Login
               </button>
             </div>
-          </div>
+          </form>
         )}
 
         {/* Login Form */}
         {activeTab === "login" && !showForgotPassword && (
-          <div className="space-y-6">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleRegistration("login");
+          }} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email or Username
@@ -313,8 +340,10 @@ const Login = () => {
                   onChange={(e) =>
                     setLoginInput({ ...loginInput, email: e.target.value })
                   }
+                  onKeyPress={(e) => handleKeyPress(e, "login")}
                   disabled={isLoading}
                   required
+                  autoComplete="username"
                 />
               </div>
               {loginErrors.email && (
@@ -330,18 +359,33 @@ const Login = () => {
               <div className="relative group">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-900" />
                 <input
-                  type="password"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#001a33]"
+                  type={showLoginPassword ? "text" : "password"}
+                  className="block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#001a33]"
                   placeholder="Enter your password"
                   value={loginInput.password}
                   onChange={(e) =>
                     setLoginInput({ ...loginInput, password: e.target.value })
                   }
+                  onKeyPress={(e) => handleKeyPress(e, "login")}
                   disabled={isLoading}
                   required
+                  autoComplete="current-password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  disabled={isLoading}
+                >
+                  {showLoginPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
               <button
+                type="button"
                 onClick={() => setShowForgotPassword(true)}
                 className="text-sm text-[#001a33] hover:underline"
                 disabled={isLoading}
@@ -355,18 +399,21 @@ const Login = () => {
               )}
             </div>
             <button
-              onClick={() => handleRegistration("login")}
+              type="submit"
               className={`${buttonClass} bg-[#001a33] text-white hover:bg-[#002b4d]`}
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Sign in to your account"}
             </button>
-          </div>
+          </form>
         )}
 
         {/* Sign Up Form */}
         {activeTab === "signup" && !showForgotPassword && (
-          <div className="space-y-2">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleRegistration("signup");
+          }} className="space-y-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email
@@ -381,8 +428,10 @@ const Login = () => {
                   onChange={(e) =>
                     setSignupInput({ ...signupInput, email: e.target.value })
                   }
+                  onKeyPress={(e) => handleKeyPress(e, "signup")}
                   disabled={isLoading}
                   required
+                  autoComplete="email"
                 />
               </div>
               {signupErrors.email && (
@@ -408,8 +457,10 @@ const Login = () => {
                   onChange={(e) =>
                     setSignupInput({ ...signupInput, username: e.target.value })
                   }
+                  onKeyPress={(e) => handleKeyPress(e, "signup")}
                   disabled={isLoading}
                   required
+                  autoComplete="username"
                 />
               </div>
               {signupErrors.username && (
@@ -428,16 +479,30 @@ const Login = () => {
                   <Lock className="h-5 w-5 text-[#002b4d] group-focus-within:text-[#001a33]" />
                 </div>
                 <input
-                  type="password"
-                  className={`block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] `}
+                  type={showSignupPassword ? "text" : "password"}
+                  className={`block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] `}
                   placeholder="Create a password"
                   value={signupInput.password}
                   onChange={(e) =>
                     setSignupInput({ ...signupInput, password: e.target.value })
                   }
+                  onKeyPress={(e) => handleKeyPress(e, "signup")}
                   disabled={isLoading}
                   required
+                  autoComplete="new-password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowSignupPassword(!showSignupPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  disabled={isLoading}
+                >
+                  {showSignupPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
               {signupErrors.password && (
                 <p className="text-red-500 text-sm mt-1">
@@ -455,8 +520,8 @@ const Login = () => {
                   <Lock className="h-5 w-5 text-[#002b4d] group-focus-within:text-[#001a33]" />
                 </div>
                 <input
-                  type="password"
-                  className={`block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] `}
+                  type={showConfirmPassword ? "text" : "password"}
+                  className={`block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#001a33] `}
                   placeholder="Confirm your password"
                   value={signupInput.confirmPassword}
                   onChange={(e) =>
@@ -465,9 +530,23 @@ const Login = () => {
                       confirmPassword: e.target.value,
                     })
                   }
+                  onKeyPress={(e) => handleKeyPress(e, "signup")}
                   disabled={isLoading}
                   required
+                  autoComplete="new-password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  disabled={isLoading}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
               {signupErrors.confirmPassword && (
                 <p className="text-red-500 text-sm mt-1">
@@ -478,7 +557,7 @@ const Login = () => {
 
             <div className="space-y-4">
               <button
-                onClick={() => handleRegistration("signup")}
+                type="submit"
                 className={`${buttonClass} bg-[#001a33] text-white hover:bg-[#001a33] focus:ring-2 focus:ring-[#001a33] focus:ring-offset-2`}
                 disabled={isLoading}
               >
@@ -495,7 +574,7 @@ const Login = () => {
                 </a>
               </p>
             </div>
-          </div>
+          </form>
         )}
       </div>
     </div>

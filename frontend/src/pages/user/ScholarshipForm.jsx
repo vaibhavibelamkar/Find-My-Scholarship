@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { GraduationCap, CheckCircle, Circle } from "lucide-react";
-import axios from "axios";
-import { toast } from "sonner";
-import { jwtDecode } from "jwt-decode";
+import React, { useState } from 'react';
+import { GraduationCap, CheckCircle, Circle, ArrowLeft } from 'lucide-react';
+import axios from 'axios';
+import { toast } from 'sonner';
+import { jwtDecode } from 'jwt-decode';
 
 const STEPS = [
   "Contact Details",
@@ -248,6 +248,11 @@ export function ScholarshipForm() {
   const handleBack = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
+  
+  const navigateToDashboard = () => {
+    window.location.href = "/user/dashboard";
+  };
+  
   var decoded;
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -283,11 +288,21 @@ export function ScholarshipForm() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 mt-16">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8 flex items-center justify-center gap-2">
-          <CheckCircle className="h-8 w-8 text-[#001a33]" />
-          <span className="text-2xl font-semibold text-[#001a33]">
-            Check Your Eligibility
-          </span>
+        <div className="relative mb-8">
+          <button
+            onClick={navigateToDashboard}
+            className="absolute left-0 top-0 bg-[#001a33] text-white p-2 rounded-full hover:bg-opacity-90 transition-all duration-200 shadow-md"
+            aria-label="Back to Dashboard"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          
+          <div className="text-center flex items-center justify-center gap-2">
+            <CheckCircle className="h-8 w-8 text-[#001a33]" />
+            <span className="text-2xl font-semibold text-[#001a33]">
+              Check Your Eligibility
+            </span>
+          </div>
         </div>
 
         <div className="bg-white shadow rounded-lg p-8">
