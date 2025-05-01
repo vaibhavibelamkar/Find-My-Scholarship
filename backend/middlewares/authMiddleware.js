@@ -3,15 +3,24 @@ import { User } from "../models/user.model.js";
 
 export const protect = async (req, res, next) => {
   try {
-    // Extract token from cookie header
     let token = null;
-    if (req.headers.cookie) {
+
+    // ✅ Check Authorization header first
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer ")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
+    // ✅ Fallback: Check cookies if no token in header
+    if (!token && req.headers.cookie) {
       const cookies = req.headers.cookie.split("; ").reduce((acc, cookie) => {
         const [key, value] = cookie.split("=");
         acc[key] = value;
         return acc;
       }, {});
-      token = cookies.token; // Extract the token
+      token = cookies.token;
     }
 
     if (!token) {
@@ -21,7 +30,6 @@ export const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
-
     req.user = await User.findById(decoded.userId).select("-password");
 
     if (!req.user) {

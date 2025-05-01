@@ -177,22 +177,13 @@ export const getProfile = async (req, res) => {
 
 export const sendQuestion = async (req, res) => {
   try {
-    const { question, token, status } = req.body;
+    const { question, status } = req.body;
 
     if (!question) {
       return res.status(400).json({ message: "Question is required" });
     }
 
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.SECRET_KEY);
-    } catch (error) {
-      return res.status(400).json({ message: "Invalid token", success: false });
-    }
-    const userId = decoded.userId;
-
-    // Get user information
-    const user = await User.findById(userId);
+    const user = req.user;
     if (!user) {
       return res
         .status(400)
@@ -200,7 +191,7 @@ export const sendQuestion = async (req, res) => {
     }
 
     const userInfo = {
-      id: userId,
+      id: user._id,
       username: user.username,
       email: user.email,
     };

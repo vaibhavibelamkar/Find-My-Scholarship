@@ -52,7 +52,7 @@ const indianStates = [
   "Uttar Pradesh",
   "Uttarakhand",
   "West Bengal",
-  "Delhi"
+  "Delhi",
 ];
 
 // Add this constant at the top with other constants
@@ -239,10 +239,17 @@ function Dashboard() {
         return;
       }
       const apiUrl = "http://localhost:8080/api/user/questions";
-      const response = await axios.post(apiUrl, {
-        question,
-        token,
-      });
+      const response = await axios.post(
+        apiUrl,
+        {
+          question,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.data?.success) {
         setShowThankYou(true);
@@ -278,15 +285,15 @@ function Dashboard() {
   // Add a click outside handler to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest('.filter-dropdown')) {
+      if (!event.target.closest(".filter-dropdown")) {
         setShowStateDropdown(false);
         setShowCasteDropdown(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -365,7 +372,9 @@ function Dashboard() {
                 <div className="relative filter-dropdown">
                   <button
                     className={`w-full text-left p-1 rounded flex items-center justify-between ${
-                      activeFilter === "state" ? "text-[#001a33]" : "text-gray-400"
+                      activeFilter === "state"
+                        ? "text-[#001a33]"
+                        : "text-gray-400"
                     }`}
                     onClick={() => {
                       setShowStateDropdown(!showStateDropdown);
@@ -412,14 +421,18 @@ function Dashboard() {
                 <div className="relative filter-dropdown">
                   <button
                     className={`w-full text-left p-1 rounded flex items-center justify-between ${
-                      activeFilter === "caste" ? "text-[#001a33]" : "text-gray-400"
+                      activeFilter === "caste"
+                        ? "text-[#001a33]"
+                        : "text-gray-400"
                     }`}
                     onClick={() => {
                       setShowCasteDropdown(!showCasteDropdown);
                       setShowStateDropdown(false);
                     }}
                   >
-                    <span>{selectedCaste ? `Caste: ${selectedCaste}` : "Caste"}</span>
+                    <span>
+                      {selectedCaste ? `Caste: ${selectedCaste}` : "Caste"}
+                    </span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                   {showCasteDropdown && (
@@ -428,25 +441,29 @@ function Dashboard() {
                         <button
                           key="all-castes"
                           className={`w-full text-left px-4 py-2 hover:bg-gray-50 ${
-                            !selectedCaste ? "text-[#001a33] font-medium" : "text-gray-600"
+                            !selectedCaste
+                              ? "text-[#001a33] font-medium"
+                              : "text-gray-600"
                           }`}
                           onClick={() => handleCasteSelect("All")}
                         >
                           All Castes
                         </button>
-                        {["SC", "SBC", "OBC", "VJ/NT", "EWS", "Other"].map((caste) => (
-                          <button
-                            key={caste}
-                            className={`w-full text-left px-4 py-2 hover:bg-gray-50 ${
-                              selectedCaste === caste
-                                ? "text-[#001a33] font-medium"
-                                : "text-gray-600"
-                            }`}
-                            onClick={() => handleCasteSelect(caste)}
-                          >
-                            {caste}
-                          </button>
-                        ))}
+                        {["SC", "SBC", "OBC", "VJ/NT", "EWS", "Other"].map(
+                          (caste) => (
+                            <button
+                              key={caste}
+                              className={`w-full text-left px-4 py-2 hover:bg-gray-50 ${
+                                selectedCaste === caste
+                                  ? "text-[#001a33] font-medium"
+                                  : "text-gray-600"
+                              }`}
+                              onClick={() => handleCasteSelect(caste)}
+                            >
+                              {caste}
+                            </button>
+                          )
+                        )}
                       </div>
                     </div>
                   )}
@@ -607,7 +624,6 @@ function Dashboard() {
                   />
                   <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
                 </div>
-            
               </div>
 
               <div className="grid grid-cols-3 gap-4 flex-1">
