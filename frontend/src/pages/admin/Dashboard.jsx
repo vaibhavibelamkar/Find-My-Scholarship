@@ -14,34 +14,13 @@ import {
   ArrowLeft,
   User,
   Bell as BellIcon,
-  Shield,
-  Mail,
-  Key,
   Save,
   HelpCircle,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import Scheme from "../user/Scheme.jsx";
-
-const students = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    appliedScholarships: 3,
-    status: "verified",
-    registeredDate: "2024-02-15",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane@example.com",
-    appliedScholarships: 2,
-    status: "pending",
-    registeredDate: "2024-03-01",
-  },
-];
 
 function Dashboard() {
   const [userData, setUserData] = useState(null);
@@ -79,6 +58,7 @@ function Dashboard() {
   const [showAnswerModal, setShowAnswerModal] = useState(false);
   const [showDeleteQuestionModal, setShowDeleteQuestionModal] = useState(false);
   const [answer, setAnswer] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Admin settings state
   const [adminProfile, setAdminProfile] = useState({
@@ -571,6 +551,12 @@ function Dashboard() {
 
   const handleDeleteQuestion = async () => {
     try {
+      if (!selectedQuestion?._id) {
+        toast.error("Invalid question ID");
+        return;
+      }
+
+      console.log("Attempting to delete question:", selectedQuestion._id);
       const API_BASE_URL = "http://localhost:8080/api/admin/questions";
       const response = await axios.delete(
         `${API_BASE_URL}/${selectedQuestion._id}`,
@@ -588,9 +574,12 @@ function Dashboard() {
         );
         setShowDeleteQuestionModal(false);
         toast.success("Question deleted successfully!");
+      } else {
+        toast.error(response.data?.message || "Failed to delete question");
       }
     } catch (error) {
-      toast.error("Error deleting question:", error);
+      console.error("Error deleting question:", error);
+      toast.error(error.response?.data?.message || "Error deleting question");
     }
   };
 
@@ -1389,6 +1378,19 @@ function Dashboard() {
               <h2 className="text-2xl font-semibold">User Questions</h2>
             </div>
 
+            <div className="flex justify-between items-center">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search questions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
+                />
+                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+              </div>
+            </div>
+
             <div className="bg-white shadow-sm rounded-lg overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -1398,6 +1400,9 @@ function Dashboard() {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Asked By
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Visibility
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -1411,22 +1416,12 @@ function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {userQuestions.map((question) => (
+                  {getFilteredAndSortedQuestions().map((question) => (
                     <tr key={question._id}>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">
                           {question.question}
                         </div>
-                        {/* {question.answer && (
-                          <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                            <p className="text-sm font-medium text-gray-700">
-                              Answer:
-                            </p>
-                            <p className="mt-1 text-sm text-gray-600">
-                              {question.answer}
-                            </p>
-                          </div>
-                        )} */}
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
@@ -1436,11 +1431,24 @@ function Dashboard() {
                           {question.user.email}
                         </div>
                       </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-3 py-1 text-xs rounded-full ${
+                            question.visibility === "public"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-purple-100 text-purple-800"
+                          }`}
+                        >
+                          {question.visibility}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-3 py-1 text-xs rounded-full ${
                             question.status === "Answered"
                               ? "bg-green-100 text-green-800"
+                              : question.status === "Deleted"
+                              ? "bg-red-100 text-red-800"
                               : "bg-yellow-100 text-yellow-800"
                           }`}
                         >
@@ -1671,33 +1679,55 @@ function Dashboard() {
     }
   };
 
+  // Add this function to sort and filter questions
+  const getFilteredAndSortedQuestions = () => {
+    let filtered = [...userQuestions];
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (q) =>
+          q.question.toLowerCase().includes(query) ||
+          q.user.username.toLowerCase().includes(query) ||
+          q.visibility.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort questions: Pending first, then Answered, then Deleted
+    return filtered.sort((a, b) => {
+      const statusOrder = { Pending: 0, Answered: 1, Deleted: 2 };
+      return statusOrder[a.status] - statusOrder[b.status];
+    });
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50 pt-16">
       {/* Sidebar */}
       <div className="w-64 bg-white shadow-lg fixed left-0 top-16 h-[calc(100vh-4rem)]">
         <nav className="mt-8">
           <div className="px-4 space-y-2">
-          <div className="mt-5 mr-10 p-4 bg-white rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-100 shadow-md flex-shrink-0">
-              <img
-                src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
-                alt="Profile"
-                className="w-full h-full object-cover rounded-full"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-700 truncate">
-                {userData ? userData.username : ""}
-              </p>
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <span className="truncate">
-                  {userData ? userData.email : ""}
-                </span>
+            <div className="mt-5 mr-10 p-4 bg-white rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-100 shadow-md flex-shrink-0">
+                  <img
+                    src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
+                    alt="Profile"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-700 truncate">
+                    {userData ? userData.username : ""}
+                  </p>
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <span className="truncate">
+                      {userData ? userData.email : ""}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
             <button
               onClick={() => setActiveSection("dashboard")}
               className={`w-full flex items-center gap-2 p-2 rounded-lg ${

@@ -41,7 +41,7 @@ const StudentsTable = ({ setActiveSection }) => {
             search: searchTerm,
             status: statusFilter,
             page: pagination.page,
-            limit: 10
+            limit: 10,
           },
           headers: {
             Authorization: `Bearer ${token}`,
@@ -68,7 +68,7 @@ const StudentsTable = ({ setActiveSection }) => {
     const value = e.target.value;
     setSearchTerm(value);
     setShowSuggestions(value.length > 0);
-    
+
     // Clear suggestions if search term is empty
     if (value.length === 0) {
       setSuggestions([]);
@@ -87,7 +87,7 @@ const StudentsTable = ({ setActiveSection }) => {
         {
           params: {
             search: term,
-            limit: 5
+            limit: 5,
           },
           headers: {
             Authorization: `Bearer ${token}`,
@@ -125,32 +125,6 @@ const StudentsTable = ({ setActiveSection }) => {
   const handleViewStudent = (student) => {
     setSelectedStudent(student);
     setShowViewModal(true);
-  };
-
-  // Verify student
-  const handleVerifyStudent = async (studentId) => {
-    try {
-      const token = getCookie("token");
-      const response = await axios.put(
-        `http://localhost:8080/api/admin/students/${studentId}/verify`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.success) {
-        toast.success("Student verified successfully");
-        fetchStudents(); // Refresh the list
-      } else {
-        toast.error("Failed to verify student");
-      }
-    } catch (error) {
-      console.error("Error verifying student:", error);
-      toast.error("Error verifying student");
-    }
   };
 
   // Delete student
@@ -236,7 +210,9 @@ const StudentsTable = ({ setActiveSection }) => {
                   }}
                 >
                   <div className="font-medium">{suggestion.fullName}</div>
-                  <div className="text-sm text-gray-500">{suggestion.email}</div>
+                  <div className="text-sm text-gray-500">
+                    {suggestion.email}
+                  </div>
                 </div>
               ))}
             </div>
@@ -271,9 +247,6 @@ const StudentsTable = ({ setActiveSection }) => {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Applied Scholarships
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Registered Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -304,9 +277,6 @@ const StudentsTable = ({ setActiveSection }) => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      {student.appliedScholarships || 0}
-                    </td>
-                    <td className="px-6 py-4">
                       {new Date(student.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
@@ -316,12 +286,6 @@ const StudentsTable = ({ setActiveSection }) => {
                           onClick={() => handleViewStudent(student)}
                         >
                           <Eye className="w-5 h-5" />
-                        </button>
-                        <button
-                          className="p-1 text-gray-600 hover:text-green-600"
-                          onClick={() => handleVerifyStudent(student._id)}
-                        >
-                          <CheckCircle2 className="w-5 h-5" />
                         </button>
                         <button
                           className="p-1 text-gray-600 hover:text-red-600"

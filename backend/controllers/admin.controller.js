@@ -6,6 +6,7 @@ import { AdminSettings } from "../models/adminSettings.model.js";
 import { sendEmail } from "../utils/email.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 export const addScheme = async (req, res) => {
   try {
@@ -140,20 +141,46 @@ export const answerQuestion = async (req, res) => {
 
 export const deleteQuestion = async (req, res) => {
   try {
-    const question = await Question.findByIdAndDelete(req.params.id);
+    console.log("Delete question request received:", {
+      questionId: req.params.id,
+      user: req.user,
+    });
+
+    const question = await Question.findById(req.params.id);
+    console.log("Found question:", question);
 
     if (!question) {
+      console.log("Question not found with ID:", req.params.id);
       return res.status(404).json({
         success: false,
         message: "Question not found",
       });
     }
 
+    // Soft delete the question
+    question.status = "Deleted";
+    if (req.user && req.user._id) {
+      question.deletedBy = req.user._id;
+    }
+    question.deletedAt = new Date();
+
+    // Remove the user.id field if it's not a valid ObjectId
+    if (
+      question.user &&
+      question.user.id &&
+      !mongoose.Types.ObjectId.isValid(question.user.id)
+    ) {
+      question.user.id = undefined;
+    }
+
+    await question.save();
+
     return res.status(200).json({
       success: true,
       message: "Question deleted successfully",
     });
   } catch (error) {
+    console.error("Error deleting question:", error);
     return res.status(500).json({
       success: false,
       message: "Error deleting question",

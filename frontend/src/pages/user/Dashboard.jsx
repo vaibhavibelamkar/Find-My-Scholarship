@@ -8,6 +8,7 @@ import {
   Star,
   StarOff,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -69,6 +70,27 @@ function Dashboard() {
   const [announcementData, setAnnouncementData] = useState([]);
   const [userQuestions, setUserQuestions] = useState([]);
   const [selectedCaste, setSelectedCaste] = useState("");
+  const [visibility, setVisibility] = useState("public");
+  const [publicQuestions, setPublicQuestions] = useState([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState(null);
+
+  const fetchPublicQuestions = async () => {
+    try {
+      const API_BASE_URL = "http://localhost:8080/api/user/public-questions";
+      const response = await axios.get(`${API_BASE_URL}`, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.data?.success) {
+        setPublicQuestions(response.data.data || []);
+      }
+    } catch (error) {
+      toast.error("Error fetching public questions:", error);
+    }
+  };
 
   const getCookie = (name) => {
     const cookies = document.cookie.split("; ");
@@ -168,6 +190,7 @@ function Dashboard() {
     fetchScholarships();
     fetchAnnouncements();
     fetchUserQuestions();
+    fetchPublicQuestions();
   }, [navigate]);
 
   const [activeFilter, setActiveFilter] = useState("all");
@@ -203,11 +226,13 @@ function Dashboard() {
         const state = (scholarship.state || "").toLowerCase();
         const benefits = (scholarship.benefits || "").toLowerCase();
         const casteCategory = (scholarship.casteCategory || "").toLowerCase();
-        
-        return schemeName.includes(query) ||
-               state.includes(query) ||
-               benefits.includes(query) ||
-               casteCategory.includes(query);
+
+        return (
+          schemeName.includes(query) ||
+          state.includes(query) ||
+          benefits.includes(query) ||
+          casteCategory.includes(query)
+        );
       });
     }
 
@@ -248,6 +273,7 @@ function Dashboard() {
         apiUrl,
         {
           question,
+          visibility,
         },
         {
           headers: {
@@ -264,6 +290,10 @@ function Dashboard() {
           response.data.data,
           ...prevQuestions,
         ]);
+        // Refresh public questions if the new question is public
+        if (visibility === "public") {
+          fetchPublicQuestions();
+        }
       } else {
         toast.error(response.data?.message || "Error submitting question");
       }
@@ -302,27 +332,50 @@ function Dashboard() {
     };
   }, []);
 
-  const [answeredQueries, setAnsweredQueries] = useState([
-    {
-      id: 1,
-      question: "What are the eligibility criteria for XYZ scholarship?",
-      answer:
-        "The criteria include a minimum GPA of 3.5 and household income under $50,000.",
-    },
-    {
-      id: 2,
-      question: "When is the last date to apply for ABC scholarship?",
-      answer: "The last date is April 15, 2025.",
-    },
-  ]);
+  const handleDeleteQuestion = async (id) => {
+    try {
+      const token = getCookie("token");
+      if (!token) {
+        toast.error("token not found");
+        return;
+      }
+      const API_BASE_URL = "http://localhost:8080/api/user/questions";
+      const response = await axios.delete(`${API_BASE_URL}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-  const [pendingQueries, setPendingQueries] = useState([
-    {
-      id: 3,
-      question: "Can international students apply for this scholarship?",
-    },
-    { id: 4, question: "What documents are required for the application?" },
-  ]);
+      if (response.data?.success) {
+        toast.success("Question deleted successfully");
+        setUserQuestions((prevQuestions) =>
+          prevQuestions.filter((q) => q._id !== id)
+        );
+        // Refresh public questions if the deleted question is public
+        if (visibility === "public") {
+          fetchPublicQuestions();
+        }
+      } else {
+        toast.error(response.data?.message || "Error deleting question");
+      }
+    } catch (error) {
+      console.error("Error deleting question:", error);
+      toast.error(error.response?.data?.message || "Error deleting question");
+    }
+  };
+
+  const confirmDelete = (question) => {
+    setQuestionToDelete(question);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (questionToDelete) {
+      handleDeleteQuestion(questionToDelete._id);
+      setShowDeleteConfirm(false);
+      setQuestionToDelete(null);
+    }
+  };
 
   return (
     <div className="h-screen flex 1 pt-16 p-6 bg-gray-50">
@@ -511,7 +564,7 @@ function Dashboard() {
       <main className="flex-1">
         <div className="h-screen p-6">
           {showHelpForm ? (
-            <div className="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-400">
+            <div className="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-sm">
               <h2 className="text-xl font-semibold mb-6">Help & FAQs</h2>
               {showThankYou ? (
                 <div className="text-center py-8">
@@ -523,96 +576,206 @@ function Dashboard() {
                   </p>
                 </div>
               ) : (
-                <>
-                  <form onSubmit={handleQuestionSubmit} className="space-y-6">
-                    {/* Question Input */}
-                    <div>
-                      <label
-                        htmlFor="question"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Ask your question
-                      </label>
-                      <textarea
-                        id="question"
-                        value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
-                        rows={4}
-                        required
-                      />
-                    </div>
+                <div className="flex gap-8">
+                  {/* Left side - Question form and user's questions */}
+                  <div className="flex-1">
+                    <form onSubmit={handleQuestionSubmit} className="space-y-6">
+                      {/* Question Input */}
+                      <div>
+                        <label
+                          htmlFor="question"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                          Ask your question
+                        </label>
+                        <textarea
+                          id="question"
+                          value={question}
+                          onChange={(e) => setQuestion(e.target.value)}
+                          className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
+                          rows={4}
+                          required
+                        />
+                      </div>
 
-                    {/* Buttons */}
-                    <div className="flex gap-2">
-                      <button
-                        type="submit"
-                        className="px-5 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90"
-                      >
-                        Send Question
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowHelpForm(false)}
-                        className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
+                      {/* Visibility Radio Buttons */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Question Visibility
+                        </label>
+                        <div className="flex gap-4">
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="visibility"
+                              value="public"
+                              checked={visibility === "public"}
+                              onChange={(e) => setVisibility(e.target.value)}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">
+                              Public (Visible to all users)
+                            </span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="visibility"
+                              value="private"
+                              checked={visibility === "private"}
+                              onChange={(e) => setVisibility(e.target.value)}
+                              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">
+                              Private (Visible only to admin)
+                            </span>
+                          </label>
+                        </div>
+                      </div>
 
-                  {/* User's Question History */}
-                  <div className="mt-8">
-                    <h3 className="text-lg font-semibold mb-4">
-                      Your Questions
-                    </h3>
-                    {userQuestions.length > 0 ? (
-                      <div className="space-y-4">
-                        {userQuestions.map((q) => (
-                          <div
-                            key={q._id}
-                            className="p-4 border border-gray-200 rounded-lg bg-white"
-                          >
-                            <div className="flex justify-between items-start">
+                      {/* Buttons */}
+                      <div className="flex gap-2">
+                        <button
+                          type="submit"
+                          className="px-5 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90"
+                        >
+                          Send Question
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowHelpForm(false)}
+                          className="px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+
+                    {/* User's Question History */}
+                    <div className="mt-8">
+                      <h3 className="text-lg font-semibold mb-4">
+                        Your Questions
+                      </h3>
+                      {userQuestions.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-4">
+                          {userQuestions.map((q) => (
+                            <div
+                              key={q._id || q.id}
+                              className="p-3 border border-gray-200 rounded-lg bg-white aspect-square flex flex-col"
+                            >
                               <div className="flex-1">
-                                <p className="font-medium text-gray-900">
+                                <p className="font-medium text-gray-900 line-clamp-2 text-sm">
                                   {q.question}
                                 </p>
                                 {q.status === "Answered" && q.answer && (
-                                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-sm font-medium text-gray-700">
+                                  <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                                    <p className="text-xs font-medium text-gray-700">
                                       Answer:
                                     </p>
-                                    <p className="mt-1 text-gray-600">
+                                    <p className="mt-1 text-gray-600 line-clamp-2 text-xs">
                                       {q.answer}
                                     </p>
                                   </div>
                                 )}
+                                {q.status === "Deleted" && (
+                                  <div className="mt-2 p-2 bg-red-50 rounded-lg">
+                                    <p className="text-xs font-medium text-red-700">
+                                      This question has been deleted by the
+                                      admin
+                                    </p>
+                                  </div>
+                                )}
                               </div>
-                              <span
-                                className={`ml-4 px-3 py-1 text-xs rounded-full ${
-                                  q.status === "Answered"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-yellow-100 text-yellow-800"
-                                }`}
-                              >
-                                {q.status}
-                              </span>
+                              <div className="mt-auto flex justify-between items-center">
+                                <div>
+                                  <span
+                                    className={`px-2 py-0.5 text-xs rounded-full ${
+                                      q.status === "Answered"
+                                        ? "bg-green-100 text-green-800"
+                                        : q.status === "Deleted"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-yellow-100 text-yellow-800"
+                                    }`}
+                                  >
+                                    {q.status}
+                                  </span>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Asked on{" "}
+                                    {new Date(q.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                {q.status !== "Deleted" && (
+                                  <button
+                                    onClick={() => confirmDelete(q)}
+                                    className="p-1 text-red-600 hover:bg-red-50 rounded-lg"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                            <p className="text-xs text-gray-500 mt-2">
-                              Asked on{" "}
-                              {new Date(q.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 text-center py-4">
-                        You haven't asked any questions yet.
-                      </p>
-                    )}
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-center py-4">
+                          You haven't asked any questions yet.
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </>
+
+                  {/* Right side - Public Questions */}
+                  <div className="w-80">
+                    <div className="sticky top-0 border-l-2 border-gray-200 pl-6">
+                      <h3 className="text-lg font-semibold mb-4">
+                        Public Questions from Other Users
+                      </h3>
+                      {publicQuestions.length > 0 ? (
+                        <div className="space-y-4">
+                          {publicQuestions.map((q) => (
+                            <div
+                              key={q._id || q.id}
+                              className="p-4 border border-gray-200 rounded-lg bg-white"
+                            >
+                              <div className="flex flex-col gap-2">
+                                <p className="font-medium text-gray-900 line-clamp-2">
+                                  {q.question}
+                                </p>
+                                {q.status === "Answered" && q.answer && (
+                                  <div className="p-3 bg-gray-50 rounded-lg">
+                                    <p className="text-sm font-medium text-gray-700">
+                                      Answer:
+                                    </p>
+                                    <p className="mt-1 text-gray-600 line-clamp-2">
+                                      {q.answer}
+                                    </p>
+                                  </div>
+                                )}
+                                <span
+                                  className={`px-3 py-1 text-xs rounded-full w-fit ${
+                                    q.status === "Answered"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-yellow-100 text-yellow-800"
+                                  }`}
+                                >
+                                  {q.status}
+                                </span>
+                                <p className="text-xs text-gray-500">
+                                  Asked by {q.user?.username || "Anonymous"} on{" "}
+                                  {new Date(q.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-center py-4">
+                          No public questions available.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           ) : (
@@ -743,6 +906,36 @@ function Dashboard() {
           )}
         </div>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this question? This action cannot
+              be undone.
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setQuestionToDelete(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,118 @@ import { Question } from "../models/question.model.js";
 import { AdminSettings } from "../models/adminSettings.model.js";
 import { sendAdminNotification } from "../utils/email.js";
 
+const vulgarWords = [
+  "fuck",
+  "shit",
+  "asshole",
+  "bitch",
+  "cunt",
+  "dick",
+  "pussy",
+  "bastard",
+  "motherfucker",
+  "whore",
+  "slut",
+  "dickhead",
+  "cock",
+  "prick",
+  "twat",
+  "wanker",
+  "cocksucker",
+  "fucker",
+  "shithead",
+  "ass",
+  "arse",
+  "arsehole",
+  "bollocks",
+  "bugger",
+  "bloody",
+  "choad",
+  "crikey",
+  "crap",
+  "damn",
+  "darn",
+  "dick",
+  "dickhead",
+  "dildo",
+  "dyke",
+  "fag",
+  "faggot",
+  "fuck",
+  "goddamn",
+  "godsdamn",
+  "hell",
+  "holy shit",
+  "horseshit",
+  "jesus christ",
+  "jesus",
+  "jesus h. christ",
+  "jesus harold christ",
+  "jesus wept",
+  "jesus, mary and joseph",
+  "kike",
+  "mother fucker",
+  "motherfucker",
+  "motherfucking",
+  "nigga",
+  "nigger",
+  "piss",
+  "pissed",
+  "pissed off",
+  "prick",
+  "pussy",
+  "shit",
+  "shit ass",
+  "shitass",
+  "shitbag",
+  "shitbagger",
+  "shitbrains",
+  "shitbreath",
+  "shitcanned",
+  "shitcunt",
+  "shitdick",
+  "shite",
+  "shiteater",
+  "shited",
+  "shitey",
+  "shitface",
+  "shitfaced",
+  "shithead",
+  "shitheads",
+  "shithole",
+  "shithouse",
+  "shiting",
+  "shitings",
+  "shits",
+  "shitspitter",
+  "shitstain",
+  "shitt",
+  "shitted",
+  "shitter",
+  "shitters",
+  "shittier",
+  "shittiest",
+  "shitting",
+  "shittings",
+  "shitty",
+  "tit",
+  "tits",
+  "titties",
+  "titty",
+  "twat",
+  "twathead",
+  "twatty",
+  "twunt",
+  "wank",
+  "wanker",
+  "wanky",
+  "whore",
+  "whoreface",
+  "whorehole",
+  "whores",
+  "whoring",
+];
+
 export const checkEligibility = async (req, res) => {
   try {
     let decoded;
@@ -114,6 +226,8 @@ export const checkEligibility = async (req, res) => {
     const schemes = await Scheme.find();
     // Filter schemes based on user details and skip invalid criteria in the database
     const eligibleSchemes = schemes.filter((scheme) => {
+      const array = scheme.casteCategory.split("/");
+      // console.log(array.includes(caste), array, caste);
       if (scheme.gender == "Both" || scheme.gender == gender)
         if (scheme.state == "All" || scheme.state == state)
           if (
@@ -123,10 +237,11 @@ export const checkEligibility = async (req, res) => {
             if (
               scheme.casteCategory == "All" ||
               scheme.casteCategory == "-" ||
-              scheme.casteCategory.split("/").includes(caste)
-            )
+              array.includes(caste)
+            ) {
+              // console.log(array.includes(caste), array, caste);
               return true;
-
+            }
       return false;
     });
     // console.log(eligibleSchemes);
@@ -177,29 +292,48 @@ export const getProfile = async (req, res) => {
 
 export const sendQuestion = async (req, res) => {
   try {
-    const { question, status } = req.body;
+    const { question, visibility } = req.body;
 
     if (!question) {
-      return res.status(400).json({ message: "Question is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Question is required",
+      });
+    }
+
+    // Check for vulgar words
+    const questionLower = question.toLowerCase();
+    const containsVulgarWord = vulgarWords.some((word) =>
+      questionLower.includes(word.toLowerCase())
+    );
+
+    if (containsVulgarWord) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Your question contains inappropriate language. Please rephrase it.",
+      });
     }
 
     const user = req.user;
-    if (!user) {
-      return res
-        .status(400)
-        .json({ message: "User not found", success: false });
-    }
-
-    const userInfo = {
-      id: user._id,
-      username: user.username,
-      email: user.email,
+    let userInfo = {
+      username: "Anonymous",
+      email: "anonymous@example.com",
     };
+
+    if (user) {
+      userInfo = {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      };
+    }
 
     const newQuestion = new Question({
       question,
       user: userInfo,
       status: "Pending",
+      visibility: visibility || "public",
     });
 
     await newQuestion.save();
@@ -219,9 +353,10 @@ export const sendQuestion = async (req, res) => {
         // Send email notification to admin
         const subject = "New User Question";
         const content = `
-          <p><strong>User:</strong> ${user.fullName || user.username}</p>
-          <p><strong>Email:</strong> ${user.email}</p>
+          <p><strong>User:</strong> ${userInfo.username}</p>
+          <p><strong>Email:</strong> ${userInfo.email}</p>
           <p><strong>Question:</strong> ${question}</p>
+          <p><strong>Visibility:</strong> ${visibility || "public"}</p>
           <p><a href="${
             process.env.FRONTEND_URL
           }/admin/dashboard?section=questions" style="display: inline-block; background-color: #002b4d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 10px;">View Question</a></p>
@@ -270,5 +405,60 @@ export const getUserQuestions = async (req, res) => {
   } catch (error) {
     console.error("Error fetching user questions:", error);
     res.status(500).json({ message: "Server error. Please try again later." });
+  }
+};
+
+export const getPublicQuestions = async (req, res) => {
+  try {
+    const questions = await Question.find({
+      visibility: "public",
+      status: { $ne: "Deleted" },
+    })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    res.status(200).json({
+      success: true,
+      data: questions,
+    });
+  } catch (error) {
+    console.error("Error fetching public questions:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
+};
+
+export const deleteQuestion = async (req, res) => {
+  try {
+    const question = await Question.findById(req.params.id);
+
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: "Question not found",
+      });
+    }
+
+    // Check if the user is the owner of the question
+    if (question.user.id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete this question",
+      });
+    }
+
+    // Delete the question from the database
+    await Question.findByIdAndDelete(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Question deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting question:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error deleting question",
+      error: error.message,
+    });
   }
 };

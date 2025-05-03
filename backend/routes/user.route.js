@@ -4,6 +4,8 @@ import {
   getProfile,
   sendQuestion,
   getUserQuestions,
+  getPublicQuestions,
+  deleteQuestion,
 } from "../controllers/user.controller.js";
 import { protect, userOnly } from "../middlewares/authMiddleware.js";
 
@@ -17,5 +19,9 @@ router
   .route("/questions")
   .post(protect, userOnly, sendQuestion)
   .get(protect, userOnly, getUserQuestions);
+
+router.route("/questions/:id").delete(protect, userOnly, deleteQuestion);
+
+router.route("/public-questions").get(getPublicQuestions);
 
 export default router;

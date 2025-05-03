@@ -11,25 +11,37 @@ const questionSchema = new mongoose.Schema(
       id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        default: "Anonymous",
+        required: false,
       },
       username: {
         type: String,
-        default: "Anonymous",
+        required: true,
       },
       email: {
         type: String,
-        default: "Anonymous",
+        required: true,
       },
     },
     status: {
       type: String,
-      enum: ["Pending", "Answered"],
+      enum: ["Pending", "Answered", "Deleted"],
       default: "Pending",
     },
     answer: {
       type: String,
       default: "",
+    },
+    visibility: {
+      type: String,
+      enum: ["public", "private"],
+      default: "public",
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    deletedAt: {
+      type: Date,
     },
   },
   {
