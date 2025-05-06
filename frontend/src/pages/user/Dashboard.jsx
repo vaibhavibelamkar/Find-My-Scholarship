@@ -657,61 +657,64 @@ function Dashboard() {
                         Your Questions
                       </h3>
                       {userQuestions.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-3">
                           {userQuestions.map((q) => (
                             <div
                               key={q._id || q.id}
-                              className="p-3 border border-gray-200 rounded-lg bg-white aspect-square flex flex-col"
+                              className="p-3 border border-gray-200 rounded-lg bg-white hover:border-[#001a33] transition-colors"
                             >
-                              <div className="flex-1">
-                                <p className="font-medium text-gray-900 line-clamp-2 text-sm">
-                                  {q.question}
-                                </p>
-                                {q.status === "Answered" && q.answer && (
-                                  <div className="mt-2 p-2 bg-gray-50 rounded-lg">
-                                    <p className="text-xs font-medium text-gray-700">
-                                      Answer:
-                                    </p>
-                                    <p className="mt-1 text-gray-600 line-clamp-2 text-xs">
-                                      {q.answer}
-                                    </p>
-                                  </div>
-                                )}
-                                {q.status === "Deleted" && (
-                                  <div className="mt-2 p-2 bg-red-50 rounded-lg">
-                                    <p className="text-xs font-medium text-red-700">
-                                      This question has been deleted by the
-                                      admin
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="mt-auto flex justify-between items-center">
-                                <div>
-                                  <span
-                                    className={`px-2 py-0.5 text-xs rounded-full ${
-                                      q.status === "Answered"
-                                        ? "bg-green-100 text-green-800"
-                                        : q.status === "Deleted"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-yellow-100 text-yellow-800"
-                                    }`}
-                                  >
-                                    {q.status}
-                                  </span>
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    Asked on{" "}
-                                    {new Date(q.createdAt).toLocaleDateString()}
-                                  </p>
-                                </div>
+                              <div className="flex justify-between items-start mb-2">
+                                <span
+                                  className={`px-2 py-0.5 text-xs rounded-full ${
+                                    q.visibility === "public"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : "bg-purple-100 text-purple-800"
+                                  }`}
+                                >
+                                  {q.visibility}
+                                </span>
                                 {q.status !== "Deleted" && (
                                   <button
                                     onClick={() => confirmDelete(q)}
                                     className="p-1 text-red-600 hover:bg-red-50 rounded-lg"
                                   >
-                                    <Trash2 className="w-4 h-4" />
+                                    <Trash2 className="w-3 h-3" />
                                   </button>
                                 )}
+                              </div>
+                              <p className="font-medium text-gray-900 line-clamp-2 text-sm mb-2">
+                                {q.question}
+                              </p>
+                              {q.status === "Answered" && q.answer && (
+                                <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                                  <p className="text-xs font-medium text-gray-700">Answer:</p>
+                                  <p className="mt-1 text-gray-600 line-clamp-2 text-xs">
+                                    {q.answer}
+                                  </p>
+                                </div>
+                              )}
+                              {q.status === "Deleted" && (
+                                <div className="mt-2 p-2 bg-red-50 rounded-lg">
+                                  <p className="text-xs font-medium text-red-700">
+                                    This question has been deleted by the admin
+                                  </p>
+                                </div>
+                              )}
+                              <div className="mt-2 flex justify-between items-center">
+                                <span
+                                  className={`px-2 py-0.5 text-xs rounded-full ${
+                                    q.status === "Answered"
+                                      ? "bg-green-100 text-green-800"
+                                      : q.status === "Deleted"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-yellow-100 text-yellow-800"
+                                  }`}
+                                >
+                                  {q.status}
+                                </span>
+                                <p className="text-xs text-gray-500">
+                                  {new Date(q.createdAt).toLocaleDateString()}
+                                </p>
                               </div>
                             </div>
                           ))}

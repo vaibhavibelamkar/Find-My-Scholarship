@@ -13,6 +13,7 @@ import {
 import axios from "axios";
 import { toast } from "sonner";
 
+
 // Add the CASTES constant
 const CASTES = ["All", "SC", "SBC", "OBC", "VJ/NT", "EWS", "Other"];
 
@@ -73,7 +74,15 @@ function Scheme() {
   });
 
   return (
+
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden mt-16">
+          <button
+                onClick={() => setActiveSection("dashboard")}
+                className="flex items-center gap-2 text-[#002b4d] hover:text-[#004d80] mb-2 w-max"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Dashboard
+              </button>
       {/* Search and Filters */}
       <div className="container mx-auto px-4 mt-0 flex flex-col">
         <div className="bg-white rounded-xl shadow-lg p-6 mb-4 sticky top-0 z-10">

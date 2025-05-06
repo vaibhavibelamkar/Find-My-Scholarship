@@ -1739,6 +1739,7 @@ function Dashboard() {
               <LayoutDashboard className="w-5 h-5" />
               Dashboard
             </button>
+            
 
             <button
               onClick={() => setActiveSection("scholarships")}
