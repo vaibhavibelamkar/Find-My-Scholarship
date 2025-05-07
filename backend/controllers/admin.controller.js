@@ -3,8 +3,7 @@ import { Question } from "../models/question.model.js";
 import { Scheme } from "../models/scheme.model.js";
 import { User } from "../models/user.model.js";
 import { AdminSettings } from "../models/adminSettings.model.js";
-import { sendEmail } from "../utils/email.js";
-import bcrypt from "bcryptjs";
+import { sendMail } from "../controllers/auth.controller.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
@@ -96,7 +95,9 @@ export const addAnnouncements = async (req, res) => {
 
 export const getAllQuestions = async (req, res) => {
   try {
-    const questions = await Question.find().sort({ createdAt: -1 });
+    const questions = await Question.find({ status: { $ne: "Deleted" } }).sort({
+      createdAt: -1,
+    });
     return res.status(200).json({
       success: true,
       data: questions,
@@ -126,6 +127,15 @@ export const answerQuestion = async (req, res) => {
       });
     }
 
+    // Send email notification if enabled
+    if (await shouldSendNotification("userQueries")) {
+      await sendMail({
+        email: "vaibhavibelamkar2004@gmail.com",
+        subject: "New User Question Received",
+        message: `A new question has been received:\n\nQuestion: ${question.question}\n\nFrom: ${question.user.username}\n\nPlease log in to the admin dashboard to answer this question.`,
+      });
+    }
+
     return res.status(200).json({
       success: true,
       data: question,
@@ -147,7 +157,6 @@ export const deleteQuestion = async (req, res) => {
     });
 
     const question = await Question.findById(req.params.id);
-    console.log("Found question:", question);
 
     if (!question) {
       console.log("Question not found with ID:", req.params.id);
@@ -321,13 +330,15 @@ export const updateAdminProfile = async (req, res) => {
   try {
     const { token, fullName, email, mobileNumber } = req.body;
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    // Get the user ID from the authenticated request
     const userId = decoded.userId;
 
     // Find the admin user
     const admin = await User.findById(userId);
     if (!admin) {
-      return res.status(404).json({ message: "Admin not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
     }
 
     // Update basic info
@@ -347,7 +358,10 @@ export const updateAdminProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating admin profile:", error);
-    res.status(500).json({ message: "Server error. Please try again later." });
+    res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
   }
 };
 
@@ -374,7 +388,7 @@ export const getAdminSettings = async (req, res) => {
 
 export const updateAdminSettings = async (req, res) => {
   try {
-    const { emailNotifications, notifications } = req.body;
+    const { notifications } = req.body;
 
     let settings = await AdminSettings.findOne({});
 
@@ -382,11 +396,7 @@ export const updateAdminSettings = async (req, res) => {
       settings = new AdminSettings();
     }
 
-    // Update settings
-    if (emailNotifications !== undefined) {
-      settings.emailNotifications = emailNotifications;
-    }
-
+    // Update notifications settings
     if (notifications) {
       settings.notifications = {
         ...settings.notifications,
@@ -403,7 +413,10 @@ export const updateAdminSettings = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating admin settings:", error);
-    res.status(500).json({ message: "Server error. Please try again later." });
+    res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
   }
 };
 
@@ -441,5 +454,104 @@ export const addOrUpdateSettings = async (req, res) => {
   } catch (error) {
     console.error("Error saving admin settings:", error);
     res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// Edit announcement
+export const editAnnouncement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and content are required",
+      });
+    }
+
+    const updatedAnnouncement = await Announcement.findByIdAndUpdate(
+      id,
+      { title, content },
+      { new: true }
+    );
+
+    if (!updatedAnnouncement) {
+      return res.status(404).json({
+        success: false,
+        message: "Announcement not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Announcement updated successfully",
+      data: updatedAnnouncement,
+    });
+  } catch (error) {
+    console.error("Error updating announcement:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating announcement",
+    });
+  }
+};
+
+// Delete announcement
+export const deleteAnnouncement = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedAnnouncement = await Announcement.findByIdAndDelete(id);
+
+    if (!deletedAnnouncement) {
+      return res.status(404).json({
+        success: false,
+        message: "Announcement not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Announcement deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting announcement:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting announcement",
+    });
+  }
+};
+
+// Add this function to check if notifications are enabled
+const shouldSendNotification = async (type) => {
+  try {
+    const settings = await AdminSettings.findOne({});
+    if (!settings) return false;
+
+    // Check if email notifications are enabled globally
+    if (!settings.emailNotifications) return false;
+
+    // Check if specific notification type is enabled
+    return settings.notifications[type] || false;
+  } catch (error) {
+    console.error("Error checking notification settings:", error);
+    return false;
+  }
+};
+
+// Add this function to handle new user notifications
+export const notifyNewUser = async (user) => {
+  try {
+    if (await shouldSendNotification("newUsers")) {
+      await sendMail({
+        email: "vaibhavibelamkar2004@gmail.com",
+        subject: "New User Registration",
+        message: `A new user has registered:\n\nName: ${user.fullName}\nEmail: ${user.email}\nCollege: ${user.collegeName}\n\nPlease log in to the admin dashboard to verify this user.`,
+      });
+    }
+  } catch (error) {
+    console.error("Error sending new user notification:", error);
   }
 };

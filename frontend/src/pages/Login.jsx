@@ -173,7 +173,12 @@ const Login = () => {
           },
         }
       );
-
+      if (response.data?.Status === "User does not exist") {
+        toast.error("User does not exist");
+        setShowForgotPassword(false);
+        setResetEmail("");
+        return;
+      }
       if (response.data?.success) {
         toast.success("Reset link has been sent to your email");
         setShowForgotPassword(false);
@@ -266,10 +271,13 @@ const Login = () => {
 
         {/* Forgot Password Form */}
         {showForgotPassword && (
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleResetPassword();
-          }} className="space-y-6">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleResetPassword();
+            }}
+            className="space-y-6"
+          >
             <div className="text-center mb-4">
               <h2 className="text-xl font-semibold text-[#001a33]">
                 Reset Password
@@ -322,10 +330,13 @@ const Login = () => {
 
         {/* Login Form */}
         {activeTab === "login" && !showForgotPassword && (
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleRegistration("login");
-          }} className="space-y-6">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleRegistration("login");
+            }}
+            className="space-y-6"
+          >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email or Username
@@ -410,10 +421,13 @@ const Login = () => {
 
         {/* Sign Up Form */}
         {activeTab === "signup" && !showForgotPassword && (
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleRegistration("signup");
-          }} className="space-y-2">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleRegistration("signup");
+            }}
+            className="space-y-2"
+          >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email

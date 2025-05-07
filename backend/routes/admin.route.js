@@ -13,6 +13,8 @@ import {
   updateAdminProfile,
   addOrUpdateSettings,
   getAdminSettings,
+  editAnnouncement,
+  deleteAnnouncement,
 } from "../controllers/admin.controller.js";
 import { protect, adminOnly } from "../middlewares/authMiddleware.js";
 
@@ -24,6 +26,7 @@ router.route("/profile").put(updateAdminProfile);
 router.route("/settings").get(getAdminSettings);
 router.route("/settings").put(updateAdminSettings);
 // router.route("/settings").post(addOrUpdateSettings);
+
 // Existing routes
 router.route("/addscheme").post(protect, adminOnly, addScheme);
 router.route("/addannouncements").post(protect, adminOnly, addAnnouncements);
@@ -35,5 +38,11 @@ router
   .route("/questions/:id")
   .put(protect, adminOnly, answerQuestion)
   .delete(protect, adminOnly, deleteQuestion);
+
+// Announcement routes
+router.route("/editannouncement/:id").put(protect, adminOnly, editAnnouncement);
+router
+  .route("/deleteannouncement/:id")
+  .delete(protect, adminOnly, deleteAnnouncement);
 
 export default router;

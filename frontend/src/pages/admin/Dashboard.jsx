@@ -278,7 +278,7 @@ function Dashboard() {
       }
 
       // Update admin profile
-      await axios.put(
+      const profileResponse = await axios.put(
         "http://localhost:8080/api/admin/profile",
         {
           token,
@@ -290,30 +290,40 @@ function Dashboard() {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         }
       );
 
+      if (!profileResponse.data?.success) {
+        throw new Error(
+          profileResponse.data?.message || "Failed to update profile"
+        );
+      }
+
       // Update admin settings
-      await axios.put(
+      const settingsResponse = await axios.put(
         "http://localhost:8080/api/admin/settings",
         {
-          emailNotifications: adminSettings.emailNotifications,
           notifications: adminSettings.notifications,
         },
         {
+          withCredentials: true,
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         }
       );
+
+      if (!settingsResponse.data?.success) {
+        throw new Error(
+          settingsResponse.data?.message || "Failed to update settings"
+        );
+      }
 
       toast.success("Settings updated successfully");
     } catch (error) {
       console.error("Error updating admin settings:", error);
-      toast.error("Failed to update settings");
+      toast.error(error.message || "Failed to update settings");
     } finally {
       setIsLoading(false);
     }
@@ -340,43 +350,70 @@ function Dashboard() {
 
   const handleSendAnnouncement = async () => {
     try {
+      // Validate the announcement data
+      if (!newAnnouncement.title.trim() || !newAnnouncement.content.trim()) {
+        toast.error("Please fill in both title and content");
+        return;
+      }
+
       const API_BASE_URL = "http://localhost:8080/api/admin/addannouncements";
+
       const response = await axios.post(`${API_BASE_URL}`, newAnnouncement, {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
         },
       });
-
       if (response.data?.success) {
+        // Create new announcement object with required fields
         const newAnnouncementWithId = {
-          ...newAnnouncement,
-          id: Date.now(),
-          date: new Date().toISOString().split("T")[0],
-          status: "sent",
+          title: newAnnouncement.title,
+          content: newAnnouncement.content,
+          _id: response.data.data?._id || Date.now().toString(), // Fallback to timestamp if _id is not available
+          createdAt: new Date().toISOString(),
         };
 
         setAnnouncementData((prev) => [newAnnouncementWithId, ...prev]);
         setNewAnnouncement({ title: "", content: "" });
         setShowAnnouncementModal(false);
-        toast.success(response.data.message);
+        toast.success(
+          response.data.message || "Announcement sent successfully!"
+        );
       } else {
         toast.error(
-          response.data.message ||
+          response.data?.message ||
             "Failed to send announcement. Please try again."
         );
       }
     } catch (error) {
-      toast.error("Error sending announcement. Please try again.");
+      console.error("Error details:", error.response?.data || error.message);
+      toast.error(
+        error.response?.data?.message ||
+          "Error sending announcement. Please try again."
+      );
     }
+  };
+
+  // Update the modal close handler to reset form
+  const handleCloseAnnouncementModal = () => {
+    setShowAnnouncementModal(false);
+    setNewAnnouncement({ title: "", content: "" });
   };
 
   const handleEditAnnouncement = async () => {
     try {
+      if (!selectedAnnouncement?._id) {
+        toast.error("Invalid announcement ID");
+        return;
+      }
+
       const API_BASE_URL = "http://localhost:8080/api/admin/editannouncement";
       const response = await axios.put(
-        `${API_BASE_URL}/${selectedAnnouncement.id}`,
-        newAnnouncement,
+        `${API_BASE_URL}/${selectedAnnouncement._id}`,
+        {
+          title: newAnnouncement.title,
+          content: newAnnouncement.content,
+        },
         {
           withCredentials: true,
           headers: {
@@ -388,7 +425,7 @@ function Dashboard() {
       if (response.data?.success) {
         setAnnouncementData((prev) =>
           prev.map((announcement) =>
-            announcement.id === selectedAnnouncement.id
+            announcement._id === selectedAnnouncement._id
               ? { ...announcement, ...newAnnouncement }
               : announcement
           )
@@ -397,18 +434,26 @@ function Dashboard() {
         setNewAnnouncement({ title: "", content: "" });
         toast.success("Announcement updated successfully!");
       } else {
-        toast.error(response.data.message || "Failed to update announcement");
+        toast.error(response.data?.message || "Failed to update announcement");
       }
     } catch (error) {
-      toast.error("Error updating announcement");
+      console.error("Error updating announcement:", error);
+      toast.error(
+        error.response?.data?.message || "Error updating announcement"
+      );
     }
   };
 
   const handleDeleteAnnouncement = async () => {
     try {
+      if (!selectedAnnouncement?._id) {
+        toast.error("Invalid announcement ID");
+        return;
+      }
+
       const API_BASE_URL = "http://localhost:8080/api/admin/deleteannouncement";
       const response = await axios.delete(
-        `${API_BASE_URL}/${selectedAnnouncement.id}`,
+        `${API_BASE_URL}/${selectedAnnouncement._id}`,
         {
           withCredentials: true,
           headers: {
@@ -420,16 +465,19 @@ function Dashboard() {
       if (response.data?.success) {
         setAnnouncementData((prev) =>
           prev.filter(
-            (announcement) => announcement.id !== selectedAnnouncement.id
+            (announcement) => announcement._id !== selectedAnnouncement._id
           )
         );
         setShowDeleteAnnouncementModal(false);
         toast.success("Announcement deleted successfully!");
       } else {
-        toast.error(response.data.message || "Failed to delete announcement");
+        toast.error(response.data?.message || "Failed to delete announcement");
       }
     } catch (error) {
-      toast.error("Error deleting announcement");
+      console.error("Error deleting announcement:", error);
+      toast.error(
+        error.response?.data?.message || "Error deleting announcement"
+      );
     }
   };
 
@@ -556,7 +604,6 @@ function Dashboard() {
         return;
       }
 
-      console.log("Attempting to delete question:", selectedQuestion._id);
       const API_BASE_URL = "http://localhost:8080/api/admin/questions";
       const response = await axios.delete(
         `${API_BASE_URL}/${selectedQuestion._id}`,
@@ -785,9 +832,6 @@ function Dashboard() {
                 Benefits
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Deadline
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -807,9 +851,6 @@ function Dashboard() {
                   <div className="text-sm font-medium text-gray-900 truncate">
                     ${scheme.benefits}
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{scheme.deadline}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex gap-2">
@@ -912,6 +953,22 @@ function Dashboard() {
     </div>
   );
 
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Date not available";
+      }
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (error) {
+      return "Date not available";
+    }
+  };
+
   const renderDashboardContent = () => {
     if (activeSection === "students") {
       return <StudentsTable setActiveSection={setActiveSection} />;
@@ -974,7 +1031,7 @@ function Dashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {new Date(announcement.date).toLocaleDateString()}
+                          {formatDate(announcement.createdAt)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -1010,10 +1067,7 @@ function Dashboard() {
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">New Announcement</h2>
                     <button
-                      onClick={() => {
-                        setShowAnnouncementModal(false);
-                        setNewAnnouncement({ title: "", content: "" });
-                      }}
+                      onClick={handleCloseAnnouncementModal}
                       className="text-gray-400 hover:text-gray-500"
                     >
                       <X className="w-5 h-5" />
@@ -1050,10 +1104,7 @@ function Dashboard() {
                     </div>
                     <div className="flex justify-end gap-3 mt-6">
                       <button
-                        onClick={() => {
-                          setShowAnnouncementModal(false);
-                          setNewAnnouncement({ title: "", content: "" });
-                        }}
+                        onClick={handleCloseAnnouncementModal}
                         className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                       >
                         Cancel
@@ -1267,25 +1318,6 @@ function Dashboard() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h4 className="font-medium">Email Notifications</h4>
-                          <p className="text-sm text-gray-500">
-                            Enable or disable all email notifications
-                          </p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={adminSettings.emailNotifications}
-                            onChange={handleAdminSettingsChange}
-                            name="emailNotifications"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-text-[#001a33] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-text-[#001a33]"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
                           <h4 className="font-medium">User Queries</h4>
                           <p className="text-sm text-gray-500">
                             Receive notifications for new user questions
@@ -1299,7 +1331,7 @@ function Dashboard() {
                             onChange={handleAdminSettingsChange}
                             name="notifications.userQueries"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-text-[#001a33] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-text-[#001a33]"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#002b4d] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#002b4d]"></div>
                         </label>
                       </div>
 
@@ -1318,28 +1350,7 @@ function Dashboard() {
                             onChange={handleAdminSettingsChange}
                             name="notifications.newUsers"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-text-[#001a33] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-text-[#001a33]"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">Eligibility Checks</h4>
-                          <p className="text-sm text-gray-500">
-                            Receive notifications for eligibility checks
-                          </p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={
-                              adminSettings.notifications.eligibilityChecks
-                            }
-                            onChange={handleAdminSettingsChange}
-                            name="notifications.eligibilityChecks"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-text-[#001a33] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-text-[#001a33]"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#002b4d] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#002b4d]"></div>
                         </label>
                       </div>
                     </div>
@@ -1362,7 +1373,21 @@ function Dashboard() {
         );
 
       case "scholarships":
-        return <Scheme />;
+        return (
+          <div>
+            <button
+              onClick={() => setActiveSection("dashboard")}
+              className="flex items-center gap-2 text-[#002b4d] hover:text-[#004d80] mb-2 w-max"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Dashboard
+            </button>
+            <h2 className="text-2xl font-semibold text-center">
+              Explore Scholarships
+            </h2>
+            <Scheme />
+          </div>
+        );
 
       case "faqs":
         return (
@@ -1457,7 +1482,7 @@ function Dashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {new Date(question.createdAt).toLocaleDateString()}
+                          {formatDate(question.createdAt)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -1662,12 +1687,15 @@ function Dashboard() {
                 <div className="space-y-4">
                   {announcementData.map((announcement) => (
                     <div
-                      key={announcement.id}
+                      key={announcement._id}
                       className="py-2 border-b last:border-b-0"
                     >
                       <div className="font-medium">{announcement.title}</div>
                       <div className="text-sm text-gray-500 mt-1">
                         {announcement.content}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {formatDate(announcement.createdAt)}
                       </div>
                     </div>
                   ))}
@@ -1739,7 +1767,6 @@ function Dashboard() {
               <LayoutDashboard className="w-5 h-5" />
               Dashboard
             </button>
-            
 
             <button
               onClick={() => setActiveSection("scholarships")}

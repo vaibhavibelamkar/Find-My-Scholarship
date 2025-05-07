@@ -1,21 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-  Search,
-  Share2,
-  ExternalLink,
-  Calendar,
-  DollarSign,
-  Building2,
-  CheckCircle,
-  Edit,
-  Trash2,
-} from "lucide-react";
+import { Search, ArrowLeft } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 
-
 // Add the CASTES constant
-const CASTES = ["All", "SC", "SBC", "OBC", "VJ/NT", "EWS", "Other"];
+const CASTES = ["All", "SC", "SBC", "OBC", "EWS"];
 
 function Scheme() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,7 +13,7 @@ function Scheme() {
     category: "all",
     gender: "all",
     state: "All States", // Add state filter
-    caste: "All" // Add caste filter
+    caste: "All", // Add caste filter
   });
   const [scholarships, setScholarships] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +26,9 @@ function Scheme() {
 
   const fetchScholarships = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/scholarships/all");
+      const response = await axios.get(
+        "http://localhost:8080/api/scholarships/all"
+      );
       if (response.data?.success) {
         setScholarships(response.data.data);
       }
@@ -56,33 +47,26 @@ function Scheme() {
       .includes(searchTerm.toLowerCase());
 
     // State filter
-    const matchesState = 
-      filters.state === "All States" || 
-      scholarship.state === filters.state;
+    const matchesState =
+      filters.state === "All States" || scholarship.state === filters.state;
 
     // Caste filter
-    const matchesCaste = 
-      filters.caste === "All" || 
-      scholarship.casteCategory === filters.caste;
+    const matchesCaste =
+      filters.caste === "All" ||
+      (scholarship.casteCategory &&
+        scholarship.casteCategory
+          .split("/")
+          .some((caste) => caste.trim() === filters.caste));
 
     // Gender filter
-    const matchesGender = 
-      filters.gender === "all" || 
-      scholarship.gender === filters.gender;
+    const matchesGender =
+      filters.gender === "all" || scholarship.gender === filters.gender;
 
     return matchesSearch && matchesState && matchesCaste && matchesGender;
   });
 
   return (
-
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden mt-16">
-          <button
-                onClick={() => setActiveSection("dashboard")}
-                className="flex items-center gap-2 text-[#002b4d] hover:text-[#004d80] mb-2 w-max"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Back to Dashboard
-              </button>
       {/* Search and Filters */}
       <div className="container mx-auto px-4 mt-0 flex flex-col">
         <div className="bg-white rounded-xl shadow-lg p-6 mb-4 sticky top-0 z-10">
@@ -153,8 +137,6 @@ function Scheme() {
                 </option>
               ))}
             </select>
-
-            
           </div>
         </div>
 
@@ -162,7 +144,9 @@ function Scheme() {
         <div className="overflow-y-auto max-h-[calc(100vh-180px)] px-1">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {loading ? (
-              <div className="col-span-full text-center py-8">Loading scholarships...</div>
+              <div className="col-span-full text-center py-8">
+                Loading scholarships...
+              </div>
             ) : filteredScholarships.length > 0 ? (
               filteredScholarships.map((scholarship) => (
                 <div
@@ -196,13 +180,17 @@ function Scheme() {
                   </div>
                   <div className="mt-4 flex gap-2">
                     <button
-                      onClick={() => window.open(scholarship.siteLink, "_blank")}
+                      onClick={() =>
+                        window.open(scholarship.siteLink, "_blank")
+                      }
                       className="px-4 py-2 bg-[#001a33] text-white rounded-lg hover:bg-opacity-90"
                     >
                       View Details
                     </button>
                     <button
-                      onClick={() => window.open(scholarship.schemeDocuments, "_blank")}
+                      onClick={() =>
+                        window.open(scholarship.schemeDocuments, "_blank")
+                      }
                       className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                     >
                       View Documents

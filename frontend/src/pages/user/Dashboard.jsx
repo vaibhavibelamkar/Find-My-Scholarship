@@ -13,16 +13,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-
-const news = [
-  { id: 1, title: "New Government Scholarship Announced", date: "2024-03-01" },
-  {
-    id: 2,
-    title: "Deadline Extended for Merit Scholarships",
-    date: "2024-03-05",
-  },
-];
-
 // List of Indian states
 const indianStates = [
   "Andhra Pradesh",
@@ -55,9 +45,6 @@ const indianStates = [
   "West Bengal",
   "Delhi",
 ];
-
-// Add this constant at the top with other constants
-const CASTES = ["SC", "SBC", "OBC", "VJ/NT", "EWS", "Other"];
 
 function Dashboard() {
   const [userData, setUserData] = useState();
@@ -245,9 +232,10 @@ function Dashboard() {
 
     // Apply caste filter only if a specific caste is selected
     if (selectedCaste && selectedCaste !== "All") {
-      filtered = filtered.filter(
-        (scholarship) => scholarship.casteCategory === selectedCaste
-      );
+      filtered = filtered.filter((scholarship) => {
+        const casteCategories = (scholarship.casteCategory || "").split("/");
+        return casteCategories.some((caste) => caste.trim() === selectedCaste);
+      });
     }
 
     return filtered;
@@ -507,21 +495,19 @@ function Dashboard() {
                         >
                           All Castes
                         </button>
-                        {["SC", "SBC", "OBC", "VJ/NT", "EWS", "Other"].map(
-                          (caste) => (
-                            <button
-                              key={caste}
-                              className={`w-full text-left px-4 py-2 hover:bg-gray-50 ${
-                                selectedCaste === caste
-                                  ? "text-[#001a33] font-medium"
-                                  : "text-gray-600"
-                              }`}
-                              onClick={() => handleCasteSelect(caste)}
-                            >
-                              {caste}
-                            </button>
-                          )
-                        )}
+                        {["SC", "SBC", "OBC", "EWS"].map((caste) => (
+                          <button
+                            key={caste}
+                            className={`w-full text-left px-4 py-2 hover:bg-gray-50 ${
+                              selectedCaste === caste
+                                ? "text-[#001a33] font-medium"
+                                : "text-gray-600"
+                            }`}
+                            onClick={() => handleCasteSelect(caste)}
+                          >
+                            {caste}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -687,7 +673,9 @@ function Dashboard() {
                               </p>
                               {q.status === "Answered" && q.answer && (
                                 <div className="mt-2 p-2 bg-gray-50 rounded-lg">
-                                  <p className="text-xs font-medium text-gray-700">Answer:</p>
+                                  <p className="text-xs font-medium text-gray-700">
+                                    Answer:
+                                  </p>
                                   <p className="mt-1 text-gray-600 line-clamp-2 text-xs">
                                     {q.answer}
                                   </p>

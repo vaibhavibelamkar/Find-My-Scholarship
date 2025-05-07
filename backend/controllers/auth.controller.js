@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/generateToken.js";
+import { notifyNewUser } from "./admin.controller.js";
 
 export const register = async (req, res) => {
   try {
@@ -27,6 +28,7 @@ export const register = async (req, res) => {
       username,
       role, // ✅ Save the role in DB (defaults to "user" unless explicitly passed)
     });
+    await notifyNewUser(user);
     return res.status(201).json({
       success: true,
       message: "Account Created Successfully. Please login",
@@ -101,7 +103,7 @@ export const sendMail = async (req, res) => {
   const { email } = req.body;
   User.findOne({ email: email }).then((user) => {
     if (!user) {
-      return res.send({ Status: "User not existed" });
+      return res.send({ Status: "User does not exist" });
     }
     const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
       expiresIn: "1d",
@@ -119,7 +121,7 @@ export const sendMail = async (req, res) => {
       secure: true, // Use SSL
       auth: {
         user: "vaibhavibelamkar2004@gmail.com",
-        pass: "zspq hqjw sdle ewuo",
+        pass: "taeq npgl xtvn bhdn",
       },
     });
 
