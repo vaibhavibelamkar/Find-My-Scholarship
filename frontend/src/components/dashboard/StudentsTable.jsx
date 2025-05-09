@@ -7,7 +7,6 @@ const StudentsTable = ({ setActiveSection }) => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [pagination, setPagination] = useState({
@@ -39,7 +38,6 @@ const StudentsTable = ({ setActiveSection }) => {
         {
           params: {
             search: searchTerm,
-            status: statusFilter,
             page: pagination.page,
             limit: 10,
           },
@@ -109,13 +107,6 @@ const StudentsTable = ({ setActiveSection }) => {
     setShowSuggestions(false);
     fetchStudents();
   };
-
-  // Handle status filter change
-  const handleStatusFilterChange = (e) => {
-    setStatusFilter(e.target.value);
-    setPagination({ ...pagination, page: 1 }); // Reset to first page
-  };
-
   // Handle pagination
   const handlePageChange = (newPage) => {
     setPagination({ ...pagination, page: newPage });
@@ -158,7 +149,7 @@ const StudentsTable = ({ setActiveSection }) => {
   // Fetch students when search, filter, or page changes
   useEffect(() => {
     fetchStudents();
-  }, [searchTerm, statusFilter, pagination.page]);
+  }, [searchTerm, pagination.page]);
 
   return (
     <div className="space-y-6">
@@ -218,18 +209,6 @@ const StudentsTable = ({ setActiveSection }) => {
             </div>
           )}
         </div>
-        <select
-          className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            setPagination({ ...pagination, page: 1 });
-          }}
-        >
-          <option value="all">All Status</option>
-          <option value="verified">Verified</option>
-          <option value="pending">Pending</option>
-        </select>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -242,9 +221,6 @@ const StudentsTable = ({ setActiveSection }) => {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Student
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Registered Date
@@ -264,17 +240,6 @@ const StudentsTable = ({ setActiveSection }) => {
                           {student.email}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          student.status === "verified"
-                            ? "bg-green-50 text-green-600"
-                            : "bg-yellow-50 text-yellow-600"
-                        }`}
-                      >
-                        {student.status || "pending"}
-                      </span>
                     </td>
                     <td className="px-6 py-4">
                       {new Date(student.createdAt).toLocaleDateString()}

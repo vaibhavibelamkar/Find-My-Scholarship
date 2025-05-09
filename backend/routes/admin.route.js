@@ -15,6 +15,8 @@ import {
   getAdminSettings,
   editAnnouncement,
   deleteAnnouncement,
+  deleteScheme,
+  editScheme,
 } from "../controllers/admin.controller.js";
 import { protect, adminOnly } from "../middlewares/authMiddleware.js";
 
@@ -44,5 +46,9 @@ router.route("/editannouncement/:id").put(protect, adminOnly, editAnnouncement);
 router
   .route("/deleteannouncement/:id")
   .delete(protect, adminOnly, deleteAnnouncement);
+
+// Scheme routes
+router.route("/editscheme/:id").put(protect, adminOnly, editScheme);
+router.delete("/deletescheme/:id", protect, adminOnly, deleteScheme);
 
 export default router;

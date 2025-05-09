@@ -555,3 +555,122 @@ export const notifyNewUser = async (user) => {
     console.error("Error sending new user notification:", error);
   }
 };
+
+export const deleteScheme = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if scheme exists
+    const scheme = await Scheme.findById(id);
+    if (!scheme) {
+      return res.status(404).json({
+        success: false,
+        message: "Scheme not found",
+      });
+    }
+
+    // Delete the scheme
+    await Scheme.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Scheme deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting scheme:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting scheme",
+      error: error.message,
+    });
+  }
+};
+
+// Edit scheme
+export const editScheme = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      schemeName,
+      gender,
+      state,
+      areaOfResidence,
+      casteCategory,
+      annualIncome,
+      religion,
+      benefits,
+      schemeDocuments,
+      siteLink,
+    } = req.body;
+
+    // Validate required fields
+    if (
+      !schemeName ||
+      !gender ||
+      !state ||
+      !areaOfResidence ||
+      !casteCategory ||
+      !annualIncome ||
+      !religion ||
+      !benefits ||
+      !schemeDocuments ||
+      !siteLink
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required.",
+      });
+    }
+
+    // Check if scheme exists
+    const scheme = await Scheme.findById(id);
+    if (!scheme) {
+      return res.status(404).json({
+        success: false,
+        message: "Scheme not found",
+      });
+    }
+
+    // Check if scheme name is being changed and if it already exists
+    if (schemeName !== scheme.schemeName) {
+      const existingScheme = await Scheme.findOne({ schemeName });
+      if (existingScheme) {
+        return res.status(400).json({
+          success: false,
+          message: "Scheme name already exists",
+        });
+      }
+    }
+
+    // Update the scheme
+    const updatedScheme = await Scheme.findByIdAndUpdate(
+      id,
+      {
+        schemeName,
+        gender,
+        state,
+        areaOfResidence,
+        casteCategory,
+        annualIncome,
+        religion,
+        benefits,
+        schemeDocuments,
+        siteLink,
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Scheme updated successfully",
+      data: updatedScheme,
+    });
+  } catch (error) {
+    console.error("Error updating scheme:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating scheme",
+      error: error.message,
+    });
+  }
+};

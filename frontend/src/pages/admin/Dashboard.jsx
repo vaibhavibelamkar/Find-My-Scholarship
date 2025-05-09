@@ -331,13 +331,10 @@ function Dashboard() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log(`Field: ${name}, Value: ${value}`);
-    setFormData((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleAnnouncementInputChange = (e) => {
@@ -497,12 +494,25 @@ function Dashboard() {
 
   const handleAddScheme = async () => {
     try {
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+
+      if (!token) {
+        toast.error("Not authorized. Please login again.");
+        navigate("/login");
+        return;
+      }
+
       const response = await axios.post(
         "http://localhost:8080/api/admin/addscheme",
         formData,
         {
+          withCredentials: true,
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -533,23 +543,104 @@ function Dashboard() {
     });
   };
 
-  const handleEditScheme = (e) => {
+  const handleEditScheme = async (e) => {
     e.preventDefault();
-    setSchemes((prev) =>
-      prev.map((scheme) =>
-        scheme.id === selectedScheme.id
-          ? { ...formData, id: scheme.id }
-          : scheme
-      )
-    );
-    setShowEditModal(false);
+    try {
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+
+      if (!token) {
+        toast.error("Not authorized. Please login again.");
+        navigate("/login");
+        return;
+      }
+
+      const response = await axios.put(
+        `http://localhost:8080/api/admin/editscheme/${selectedScheme._id}`,
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data?.success) {
+        setSchemes((prev) =>
+          prev.map((scheme) =>
+            scheme._id === selectedScheme._id
+              ? { ...scheme, ...formData }
+              : scheme
+          )
+        );
+        setShowEditModal(false);
+        toast.success("Scheme updated successfully!");
+      } else {
+        toast.error(response.data?.message || "Failed to update scheme");
+      }
+    } catch (error) {
+      console.error("Error updating scheme:", error);
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            "Something went wrong. Please try again."
+        );
+      }
+    }
   };
 
-  const handleDeleteScheme = () => {
-    setSchemes((prev) =>
-      prev.filter((scheme) => scheme.id !== selectedScheme.id)
-    );
-    setShowDeleteModal(false);
+  const handleDeleteScheme = async () => {
+    try {
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+
+      if (!token) {
+        toast.error("Not authorized. Please login again.");
+        navigate("/login");
+        return;
+      }
+
+      const response = await axios.delete(
+        `http://localhost:8080/api/admin/deletescheme/${selectedScheme._id}`,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data?.success) {
+        setSchemes((prev) =>
+          prev.filter((scheme) => scheme._id !== selectedScheme._id)
+        );
+        setShowDeleteModal(false);
+        toast.success("Scheme deleted successfully!");
+      } else {
+        toast.error(response.data?.message || "Failed to delete scheme");
+      }
+    } catch (error) {
+      console.error("Error deleting scheme:", error);
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+      } else {
+        toast.error(
+          error.response?.data?.message ||
+            "Something went wrong. Please try again."
+        );
+      }
+    }
   };
 
   const openEditModal = (scheme) => {
@@ -630,169 +721,190 @@ function Dashboard() {
     }
   };
 
-  const SchemeForm = ({ onSubmit, buttonText }) => (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Scheme Name
-        </label>
-        <input
-          type="text"
-          name="schemeName"
-          value={formData.schemeName}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
+  const SchemeForm = ({ onSubmit, buttonText }) => {
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      onSubmit(e);
+    };
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Gender
-        </label>
-        <select
-          name="gender"
-          value={formData.gender}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        >
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Both">Both</option>
-        </select>
-      </div>
+    return (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Scheme Name
+          </label>
+          <input
+            type="text"
+            name="schemeName"
+            value={formData.schemeName}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">State</label>
-        <input
-          type="text"
-          name="state"
-          value={formData.state}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Gender
+          </label>
+          <select
+            name="gender"
+            value={formData.gender}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          >
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Both">Both</option>
+          </select>
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Area of Residence
-        </label>
-        <input
-          type="text"
-          name="areaOfResidence"
-          value={formData.areaOfResidence}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            State
+          </label>
+          <input
+            type="text"
+            name="state"
+            value={formData.state}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Caste Category
-        </label>
-        <input
-          type="text"
-          name="casteCategory"
-          value={formData.casteCategory}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Area of Residence
+          </label>
+          <input
+            type="text"
+            name="areaOfResidence"
+            value={formData.areaOfResidence}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Annual Income
-        </label>
-        <input
-          type="number"
-          name="annualIncome"
-          value={formData.annualIncome}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Caste Category
+          </label>
+          <input
+            type="text"
+            name="casteCategory"
+            value={formData.casteCategory}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Religion
-        </label>
-        <input
-          type="text"
-          name="religion"
-          value={formData.religion}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Annual Income
+          </label>
+          <input
+            type="number"
+            name="annualIncome"
+            value={formData.annualIncome}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Benefits
-        </label>
-        <input
-          type="text"
-          name="benefits"
-          value={formData.benefits}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Religion
+          </label>
+          <input
+            type="text"
+            name="religion"
+            value={formData.religion}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Scheme Documents
-        </label>
-        <input
-          type="text"
-          name="schemeDocuments"
-          value={formData.schemeDocuments}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Benefits
+          </label>
+          <input
+            type="text"
+            name="benefits"
+            value={formData.benefits}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Site Link
-        </label>
-        <input
-          type="url"
-          name="siteLink"
-          value={formData.siteLink}
-          onChange={handleInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          required
-        />
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Scheme Documents
+          </label>
+          <input
+            type="text"
+            name="schemeDocuments"
+            value={formData.schemeDocuments}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
 
-      <div className="flex justify-end gap-3">
-        <button
-          type="button"
-          onClick={() => {
-            setShowAddModal(false);
-            setShowEditModal(false);
-          }}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-[#002b4d] border border-transparent rounded-md"
-        >
-          {buttonText}
-        </button>
-      </div>
-    </form>
-  );
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Site Link
+          </label>
+          <input
+            type="url"
+            name="siteLink"
+            value={formData.siteLink}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            required
+          />
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setShowAddModal(false);
+              setFormData({
+                schemeName: "",
+                gender: "",
+                state: "",
+                areaOfResidence: "",
+                casteCategory: "",
+                annualIncome: "",
+                religion: "",
+                benefits: "",
+                schemeDocuments: "",
+                siteLink: "",
+              });
+            }}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 text-sm font-medium text-white bg-[#002b4d] border border-transparent rounded-md"
+          >
+            {buttonText}
+          </button>
+        </div>
+      </form>
+    );
+  };
 
   const renderScholarshipManager = () => (
     <div className="space-y-6">
@@ -837,58 +949,262 @@ function Dashboard() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {schemes.map((scheme) => (
-              <tr key={scheme.id}>
-                <td className="px-6 py-4 whitespace-nowrap max-w-xs overflow-hidden text-ellipsis">
-                  <div className="text-sm font-medium text-gray-900 truncate">
-                    {scheme.schemeName}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{scheme.state}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap max-w-xs overflow-hidden text-ellipsis">
-                  <div className="text-sm font-medium text-gray-900 truncate">
-                    ${scheme.benefits}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => openEditModal(scheme)}
-                      className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => openDeleteModal(scheme)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
+            {schemes && schemes.length > 0 ? (
+              schemes.map((scheme) => (
+                <tr key={scheme?._id || Math.random()}>
+                  <td className="px-6 py-4 whitespace-nowrap max-w-xs overflow-hidden text-ellipsis">
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      {scheme?.schemeName || "N/A"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">
+                      {scheme?.state || "N/A"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap max-w-xs overflow-hidden text-ellipsis">
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      ${scheme?.benefits || "N/A"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openEditModal(scheme)}
+                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                      >
+                        <Edit className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(scheme)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                  No schemes found
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Add Scheme Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Add New Scheme</h2>
               <button
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setFormData({
+                    schemeName: "",
+                    gender: "",
+                    state: "",
+                    areaOfResidence: "",
+                    casteCategory: "",
+                    annualIncome: "",
+                    religion: "",
+                    benefits: "",
+                    schemeDocuments: "",
+                    siteLink: "",
+                  });
+                  setShowAddModal(false);
+                }}
                 className="text-[#002b4d] hover:text-gray-500"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="overflow-y-auto flex-1 pr-2">
-              <SchemeForm onSubmit={handleAddScheme} buttonText="Add Scheme" />
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleAddScheme();
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Scheme Name
+                  </label>
+                  <input
+                    type="text"
+                    name="schemeName"
+                    value={formData.schemeName}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Gender
+                  </label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Both">Both</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Area of Residence
+                  </label>
+                  <input
+                    type="text"
+                    name="areaOfResidence"
+                    value={formData.areaOfResidence}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Caste Category
+                  </label>
+                  <input
+                    type="text"
+                    name="casteCategory"
+                    value={formData.casteCategory}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Annual Income
+                  </label>
+                  <input
+                    type="number"
+                    name="annualIncome"
+                    value={formData.annualIncome}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Religion
+                  </label>
+                  <input
+                    type="text"
+                    name="religion"
+                    value={formData.religion}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Benefits
+                  </label>
+                  <input
+                    type="text"
+                    name="benefits"
+                    value={formData.benefits}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Scheme Documents
+                  </label>
+                  <input
+                    type="text"
+                    name="schemeDocuments"
+                    value={formData.schemeDocuments}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Site Link
+                  </label>
+                  <input
+                    type="url"
+                    name="siteLink"
+                    value={formData.siteLink}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setFormData({
+                        schemeName: "",
+                        gender: "",
+                        state: "",
+                        areaOfResidence: "",
+                        casteCategory: "",
+                        annualIncome: "",
+                        religion: "",
+                        benefits: "",
+                        schemeDocuments: "",
+                        siteLink: "",
+                      });
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#002b4d] border border-transparent rounded-md"
+                  >
+                    Add Scheme
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
@@ -896,22 +1212,213 @@ function Dashboard() {
 
       {/* Edit Scheme Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Edit Scheme</h2>
               <button
-                onClick={() => setShowEditModal(false)}
+                onClick={() => {
+                  setFormData({
+                    schemeName: "",
+                    gender: "",
+                    state: "",
+                    areaOfResidence: "",
+                    casteCategory: "",
+                    annualIncome: "",
+                    religion: "",
+                    benefits: "",
+                    schemeDocuments: "",
+                    siteLink: "",
+                  });
+                  setShowEditModal(false);
+                }}
                 className="text-[#002b4d] hover:text-gray-500"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="overflow-y-auto flex-1 pr-2">
-              <SchemeForm
-                onSubmit={handleEditScheme}
-                buttonText="Update Scheme"
-              />
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleEditScheme(e);
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Scheme Name
+                  </label>
+                  <input
+                    type="text"
+                    name="schemeName"
+                    value={formData.schemeName}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Gender
+                  </label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Both">Both</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Area of Residence
+                  </label>
+                  <input
+                    type="text"
+                    name="areaOfResidence"
+                    value={formData.areaOfResidence}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Caste Category
+                  </label>
+                  <input
+                    type="text"
+                    name="casteCategory"
+                    value={formData.casteCategory}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Annual Income
+                  </label>
+                  <input
+                    type="number"
+                    name="annualIncome"
+                    value={formData.annualIncome}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Religion
+                  </label>
+                  <input
+                    type="text"
+                    name="religion"
+                    value={formData.religion}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Benefits
+                  </label>
+                  <input
+                    type="text"
+                    name="benefits"
+                    value={formData.benefits}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Scheme Documents
+                  </label>
+                  <input
+                    type="text"
+                    name="schemeDocuments"
+                    value={formData.schemeDocuments}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Site Link
+                  </label>
+                  <input
+                    type="url"
+                    name="siteLink"
+                    value={formData.siteLink}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setFormData({
+                        schemeName: "",
+                        gender: "",
+                        state: "",
+                        areaOfResidence: "",
+                        casteCategory: "",
+                        annualIncome: "",
+                        religion: "",
+                        benefits: "",
+                        schemeDocuments: "",
+                        siteLink: "",
+                      });
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#002b4d] border border-transparent rounded-md"
+                  >
+                    Update Scheme
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
@@ -924,7 +1431,21 @@ function Dashboard() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Delete Scheme</h2>
               <button
-                onClick={() => setShowDeleteModal(false)}
+                onClick={() => {
+                  setFormData({
+                    schemeName: "",
+                    gender: "",
+                    state: "",
+                    areaOfResidence: "",
+                    casteCategory: "",
+                    annualIncome: "",
+                    religion: "",
+                    benefits: "",
+                    schemeDocuments: "",
+                    siteLink: "",
+                  });
+                  setShowDeleteModal(false);
+                }}
                 className="text-gray-400 hover:text-gray-500"
               >
                 <X className="w-5 h-5" />
@@ -1302,7 +1823,7 @@ function Dashboard() {
                     </form>
                   </div>
 
-                  <div className="p-6 border-b">
+                  {/* <div className="p-6 border-b">
                     <div className="flex items-center gap-4 mb-6">
                       <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
                         <BellIcon className="w-6 h-6 text-[#001a33]" />
@@ -1354,7 +1875,7 @@ function Dashboard() {
                         </label>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="flex justify-end mt-6">
                     <button
